@@ -1,0 +1,15 @@
+# Build artifacts
+build/
+*.o
+*.obj
+*.exe
+*.wasm
+
+# Node / web
+node_modules/
+web/dist/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
