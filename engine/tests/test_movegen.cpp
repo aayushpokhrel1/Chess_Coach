@@ -69,3 +69,31 @@ TEST_CASE("knight does not capture its own pieces") {
     CHECK(has_move(moves, make_square(1,0), make_square(0,2)));       // Na3
     CHECK(has_move(moves, make_square(1,0), make_square(2,2)));       // Nc3
 }
+
+TEST_CASE("rook on an open board has 14 moves") {
+    Board b = board_from_fen("4k3/8/8/8/3R4/8/8/4K3 w - - 0 1"); // Rd4
+    auto moves = generate_pseudo_legal(b);
+    int rook = std::count_if(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(3,3);
+    });
+    CHECK(rook == 14); // 7 along the file + 7 along the rank
+}
+
+TEST_CASE("bishop is stopped by and can capture a blocker") {
+    // Bishop c1; white pawn e3 blocks one diagonal, black pawn a3 is capturable.
+    Board b = board_from_fen("4k3/8/8/8/8/p3P3/8/2B1K3 w - - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK(has_move(moves, make_square(2,0), make_square(1,1))); // Bb2
+    CHECK(has_move(moves, make_square(2,0), make_square(0,2))); // Bxa3 (capture)
+    CHECK_FALSE(has_move(moves, make_square(2,0), make_square(5,3))); // past own e3 pawn
+    CHECK_FALSE(has_move(moves, make_square(2,0), make_square(4,2))); // onto own e3 pawn
+}
+
+TEST_CASE("queen combines rook and bishop rays") {
+    Board b = board_from_fen("4k3/8/8/8/3Q4/8/8/4K3 w - - 0 1"); // Qd4
+    auto moves = generate_pseudo_legal(b);
+    int q = std::count_if(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(3,3);
+    });
+    CHECK(q == 27); // 14 rook-like + 13 bishop-like from d4
+}

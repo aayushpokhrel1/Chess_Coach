@@ -37,6 +37,27 @@ void gen_offsets(const Board& b, Square s, const int offs[8][2], int n,
 }
 
 const int KING[8][2] = {{1,0},{-1,0},{0,1},{0,-1},{1,1},{1,-1},{-1,1},{-1,-1}};
+
+void gen_slider(const Board& b, Square s, const int dirs[4][2],
+                std::vector<Move>& out) {
+    Color us = b.squares[s].color;
+    int f = file_of(s), r = rank_of(s);
+    for (int i = 0; i < 4; i++) {
+        int nf = f + dirs[i][0], nr = r + dirs[i][1];
+        while (on_board(nf, nr)) {
+            Square to = make_square(nf, nr);
+            Piece p = b.squares[to];
+            if (p.type == PieceType::None) {
+                out.push_back(Move{s, to, PieceType::None, MoveFlag::Normal});
+            } else {
+                if (p.color != us)
+                    out.push_back(Move{s, to, PieceType::None, MoveFlag::Normal});
+                break; // ray stops at the first piece either way
+            }
+            nf += dirs[i][0]; nr += dirs[i][1];
+        }
+    }
+}
 } // namespace
 
 bool is_square_attacked(const Board& b, Square sq, Color by) {
@@ -91,7 +112,11 @@ std::vector<Move> generate_pseudo_legal(const Board& b) {
         switch (p.type) {
             case PieceType::Knight: gen_offsets(b, s, KNIGHT, 8, out); break;
             case PieceType::King:   gen_offsets(b, s, KING,   8, out); break;
-            default: break; // pawns, sliders added in later tasks
+            case PieceType::Bishop: gen_slider(b, s, DIAG, out); break;
+            case PieceType::Rook:   gen_slider(b, s, ORTH, out); break;
+            case PieceType::Queen:  gen_slider(b, s, DIAG, out);
+                                    gen_slider(b, s, ORTH, out); break;
+            default: break; // pawns added in later tasks
         }
     }
     return out;
