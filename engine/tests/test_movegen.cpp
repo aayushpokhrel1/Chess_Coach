@@ -141,3 +141,32 @@ TEST_CASE("promotion expands into four moves") {
             && m.promotion == PieceType::Queen;
     }));
 }
+
+TEST_CASE("both castles available on an empty back rank") {
+    Board b = board_from_fen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK(has_move(moves, make_square(4,0), make_square(6,0))); // O-O
+    CHECK(has_move(moves, make_square(4,0), make_square(2,0))); // O-O-O
+}
+
+TEST_CASE("cannot castle through an attacked square") {
+    // Black rook on f8 attacks f1; kingside castling passes through f1.
+    Board b = board_from_fen("r3kr2/8/8/8/8/8/8/R3K2R w KQq - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK_FALSE(has_move(moves, make_square(4,0), make_square(6,0))); // O-O blocked
+}
+
+TEST_CASE("cannot castle without the right") {
+    Board b = board_from_fen("r3k2r/8/8/8/8/8/8/R3K2R w - - 0 1"); // no rights
+    auto moves = generate_pseudo_legal(b);
+    CHECK_FALSE(has_move(moves, make_square(4,0), make_square(6,0)));
+    CHECK_FALSE(has_move(moves, make_square(4,0), make_square(2,0)));
+}
+
+TEST_CASE("cannot castle out of check") {
+    // Black rook e8 gives check down the e-file; no castling while in check.
+    Board b = board_from_fen("4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK_FALSE(has_move(moves, make_square(4,0), make_square(6,0)));
+    CHECK_FALSE(has_move(moves, make_square(4,0), make_square(2,0)));
+}

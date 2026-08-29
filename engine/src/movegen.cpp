@@ -101,6 +101,37 @@ void gen_pawn(const Board& b, Square s, std::vector<Move>& out) {
         }
     }
 }
+
+void gen_castling(const Board& b, std::vector<Move>& out) {
+    Color us = b.side_to_move;
+    Color them = (us == Color::White) ? Color::Black : Color::White;
+    int r = (us == Color::White) ? 0 : 7;
+    Square king = make_square(4, r);
+    if (b.squares[king].type != PieceType::King || b.squares[king].color != us)
+        return;
+    if (is_square_attacked(b, king, them)) return; // cannot castle out of check
+
+    int kRight = (us == Color::White) ? CASTLE_WK : CASTLE_BK;
+    int qRight = (us == Color::White) ? CASTLE_WQ : CASTLE_BQ;
+
+    // Kingside: f and g empty; f and g not attacked.
+    if ((b.castling_rights & kRight)
+        && b.squares[make_square(5, r)].type == PieceType::None
+        && b.squares[make_square(6, r)].type == PieceType::None
+        && !is_square_attacked(b, make_square(5, r), them)
+        && !is_square_attacked(b, make_square(6, r), them)) {
+        out.push_back(Move{king, make_square(6, r), PieceType::None, MoveFlag::Castle});
+    }
+    // Queenside: b, c, d empty; c and d not attacked (king crosses d, lands c).
+    if ((b.castling_rights & qRight)
+        && b.squares[make_square(1, r)].type == PieceType::None
+        && b.squares[make_square(2, r)].type == PieceType::None
+        && b.squares[make_square(3, r)].type == PieceType::None
+        && !is_square_attacked(b, make_square(3, r), them)
+        && !is_square_attacked(b, make_square(2, r), them)) {
+        out.push_back(Move{king, make_square(2, r), PieceType::None, MoveFlag::Castle});
+    }
+}
 } // namespace
 
 bool is_square_attacked(const Board& b, Square sq, Color by) {
@@ -163,5 +194,6 @@ std::vector<Move> generate_pseudo_legal(const Board& b) {
             default: break;
         }
     }
+    gen_castling(b, out);
     return out;
 }
