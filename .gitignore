@@ -16,3 +16,6 @@ web/dist/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Session handover (local-only, this machine)
+HANDOVER.md

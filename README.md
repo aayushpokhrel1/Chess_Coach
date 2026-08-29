@@ -17,7 +17,6 @@ in our own engine as it matures. Neither track blocks the other.
 
 ## Docs
 
-- Handover (start here in a new session): [HANDOVER.md](HANDOVER.md)
 - Design spec: [docs/superpowers/specs/2026-08-27-chess-coach-design.md](docs/superpowers/specs/2026-08-27-chess-coach-design.md)
 - Current plan: [docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md)
 
