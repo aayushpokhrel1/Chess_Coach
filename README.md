@@ -22,12 +22,13 @@ in our own engine as it matures. Neither track blocks the other.
 
 ## Status
 
-**Milestone 1 (in progress):** C++ toolchain + tested board representation with FEN.
+**Milestone 1 (complete):** C++ toolchain + tested board representation with FEN
+(parse, generate, round-trip). All tests green.
 
-- [ ] Task 1: toolchain + CMake skeleton + doctest
-- [ ] Task 2: core value types (color, piece, square)
-- [ ] Task 3: Board struct + FEN parsing
-- [ ] Task 4: FEN generation + round-trip tests
+- [x] Task 1: toolchain + CMake skeleton + doctest
+- [x] Task 2: core value types (color, piece, square)
+- [x] Task 3: Board struct + FEN parsing
+- [x] Task 4: FEN generation + round-trip tests
 
 Next milestone: legal move generation + perft.
 
