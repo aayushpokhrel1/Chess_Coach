@@ -38,6 +38,54 @@ Board board_from_fen(const std::string& fen) {
     return b;
 }
 
+std::string fen_from_board(const Board& b) {
+    std::string fen;
+    for (int rank = 7; rank >= 0; rank--) {
+        int empty = 0;
+        for (int file = 0; file < 8; file++) {
+            Piece p = b.squares[make_square(file, rank)];
+            if (p.type == PieceType::None) {
+                empty++;
+            } else {
+                if (empty > 0) { fen += std::to_string(empty); empty = 0; }
+                fen += char_from_piece(p);
+            }
+        }
+        if (empty > 0) fen += std::to_string(empty);
+        if (rank > 0) fen += '/';
+    }
+
+    fen += ' ';
+    fen += (b.side_to_move == Color::White) ? 'w' : 'b';
+
+    fen += ' ';
+    std::string cr;
+    if (b.castling_rights & CASTLE_WK) cr += 'K';
+    if (b.castling_rights & CASTLE_WQ) cr += 'Q';
+    if (b.castling_rights & CASTLE_BK) cr += 'k';
+    if (b.castling_rights & CASTLE_BQ) cr += 'q';
+    fen += cr.empty() ? "-" : cr;
+
+    fen += ' ';
+    if (b.en_passant == NO_SQUARE) {
+        fen += '-';
+    } else {
+        fen += static_cast<char>('a' + file_of(b.en_passant));
+        fen += static_cast<char>('1' + rank_of(b.en_passant));
+    }
+
+    fen += ' ';
+    fen += std::to_string(b.halfmove_clock);
+    fen += ' ';
+    fen += std::to_string(b.fullmove_number);
+    return fen;
+}
+
+Board start_position() {
+    return board_from_fen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
+
 std::string to_ascii(const Board& b) {
     std::string out;
     for (int rank = 7; rank >= 0; rank--) {

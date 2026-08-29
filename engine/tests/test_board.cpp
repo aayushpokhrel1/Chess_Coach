@@ -27,3 +27,20 @@ TEST_CASE("parse en passant and side to move") {
     CHECK(b.en_passant == make_square(2, 5)); // c6
     CHECK(b.fullmove_number == 2);
 }
+
+TEST_CASE("FEN round-trips for known positions") {
+    const char* fens[] = {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        // Kiwipete, a standard perft test position:
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+        "8/8/8/4k3/8/8/4K3/8 b - - 5 39",
+    };
+    for (const char* f : fens) {
+        CHECK(fen_from_board(board_from_fen(f)) == std::string(f));
+    }
+}
+
+TEST_CASE("start_position matches the canonical start FEN") {
+    CHECK(fen_from_board(start_position()) ==
+          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}

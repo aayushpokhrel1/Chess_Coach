@@ -18,4 +18,6 @@ struct Board {
 };
 
 Board board_from_fen(const std::string& fen);
+std::string fen_from_board(const Board& b);
+Board start_position();
 std::string to_ascii(const Board& b);
