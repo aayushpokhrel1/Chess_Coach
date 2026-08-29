@@ -97,3 +97,47 @@ TEST_CASE("queen combines rook and bishop rays") {
     });
     CHECK(q == 27); // 14 rook-like + 13 bishop-like from d4
 }
+
+static int moves_from(const std::vector<Move>& list, Square from) {
+    return std::count_if(list.begin(), list.end(), [&](const Move& m){
+        return m.from == from;
+    });
+}
+
+TEST_CASE("pawn on start rank can push one or two") {
+    Board b = board_from_fen("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1"); // Pe2
+    auto moves = generate_pseudo_legal(b);
+    CHECK(has_move(moves, make_square(4,1), make_square(4,2))); // e3
+    CHECK(has_move(moves, make_square(4,1), make_square(4,3))); // e4
+    CHECK(moves_from(moves, make_square(4,1)) == 2);
+}
+
+TEST_CASE("pawn captures diagonally and cannot capture straight") {
+    // White Pe4; black pawns d5 and f5.
+    Board b = board_from_fen("4k3/8/8/3p1p2/4P3/8/8/4K3 w - - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK(has_move(moves, make_square(4,3), make_square(3,4))); // exd5
+    CHECK(has_move(moves, make_square(4,3), make_square(5,4))); // exf5
+    CHECK(has_move(moves, make_square(4,3), make_square(4,4))); // e5 push
+    CHECK(moves_from(moves, make_square(4,3)) == 3);
+}
+
+TEST_CASE("en passant is emitted with the right flag") {
+    Board b = board_from_fen("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"); // Pe5, ep target d6
+    auto moves = generate_pseudo_legal(b);
+    auto it = std::find_if(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(4,4) && m.to == make_square(3,5);
+    });
+    REQUIRE(it != moves.end());
+    CHECK(it->flag == MoveFlag::EnPassant);
+}
+
+TEST_CASE("promotion expands into four moves") {
+    Board b = board_from_fen("4k3/P7/8/8/8/8/8/4K3 w - - 0 1"); // Pa7
+    auto moves = generate_pseudo_legal(b);
+    CHECK(moves_from(moves, make_square(0,6)) == 4); // a8=Q,R,B,N
+    CHECK(std::any_of(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(0,6) && m.flag == MoveFlag::Promotion
+            && m.promotion == PieceType::Queen;
+    }));
+}

@@ -58,6 +58,49 @@ void gen_slider(const Board& b, Square s, const int dirs[4][2],
         }
     }
 }
+
+void add_pawn(std::vector<Move>& out, Square from, Square to,
+              bool promo, MoveFlag flag) {
+    if (promo) {
+        for (PieceType pt : {PieceType::Queen, PieceType::Rook,
+                             PieceType::Bishop, PieceType::Knight})
+            out.push_back(Move{from, to, pt, MoveFlag::Promotion});
+    } else {
+        out.push_back(Move{from, to, PieceType::None, flag});
+    }
+}
+
+void gen_pawn(const Board& b, Square s, std::vector<Move>& out) {
+    Color us = b.squares[s].color;
+    Color them = (us == Color::White) ? Color::Black : Color::White;
+    int f = file_of(s), r = rank_of(s);
+    int dir       = (us == Color::White) ? 1 : -1;
+    int startRank = (us == Color::White) ? 1 : 6;
+    int promoRank = (us == Color::White) ? 7 : 0;
+
+    // Single (and double) push.
+    int r1 = r + dir;
+    if (on_board(f, r1) && b.squares[make_square(f, r1)].type == PieceType::None) {
+        add_pawn(out, s, make_square(f, r1), r1 == promoRank, MoveFlag::Normal);
+        if (r == startRank) {
+            int r2 = r + 2 * dir;
+            if (b.squares[make_square(f, r2)].type == PieceType::None)
+                out.push_back(Move{s, make_square(f, r2),
+                                   PieceType::None, MoveFlag::DoublePawnPush});
+        }
+    }
+    // Captures, including en passant.
+    for (int df : {-1, 1}) {
+        int nf = f + df, nr = r + dir;
+        if (!on_board(nf, nr)) continue;
+        Square to = make_square(nf, nr);
+        if (b.squares[to].color == them) {
+            add_pawn(out, s, to, nr == promoRank, MoveFlag::Normal);
+        } else if (b.en_passant != NO_SQUARE && to == b.en_passant) {
+            out.push_back(Move{s, to, PieceType::None, MoveFlag::EnPassant});
+        }
+    }
+}
 } // namespace
 
 bool is_square_attacked(const Board& b, Square sq, Color by) {
@@ -116,7 +159,8 @@ std::vector<Move> generate_pseudo_legal(const Board& b) {
             case PieceType::Rook:   gen_slider(b, s, ORTH, out); break;
             case PieceType::Queen:  gen_slider(b, s, DIAG, out);
                                     gen_slider(b, s, ORTH, out); break;
-            default: break; // pawns added in later tasks
+            case PieceType::Pawn:   gen_pawn(b, s, out); break;
+            default: break;
         }
     }
     return out;
