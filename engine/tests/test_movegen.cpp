@@ -30,3 +30,42 @@ TEST_CASE("in_check detects an attacked king") {
     CHECK(in_check(b, Color::Black));
     CHECK_FALSE(in_check(b, Color::White));
 }
+
+#include <algorithm>
+
+// True if `list` contains a move from->to (ignoring flag/promotion).
+static bool has_move(const std::vector<Move>& list, Square from, Square to) {
+    return std::any_of(list.begin(), list.end(), [&](const Move& m){
+        return m.from == from && m.to == to;
+    });
+}
+
+TEST_CASE("knight in the corner has two moves") {
+    Board b = board_from_fen("4k3/8/8/8/8/8/8/N3K3 w - - 0 1"); // Na1, Ke1
+    auto moves = generate_pseudo_legal(b);
+    CHECK(has_move(moves, make_square(0,0), make_square(1,2))); // Nb3
+    CHECK(has_move(moves, make_square(0,0), make_square(2,1))); // Nc2
+    // Knight has exactly 2; total also includes the king's moves.
+    int knight_moves = std::count_if(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(0,0);
+    });
+    CHECK(knight_moves == 2);
+}
+
+TEST_CASE("king moves off its start square, not onto friendly pieces") {
+    Board b = board_from_fen("4k3/8/8/8/8/8/8/4K3 w - - 0 1"); // lone Ke1
+    auto moves = generate_pseudo_legal(b);
+    int king_moves = std::count_if(moves.begin(), moves.end(), [](const Move& m){
+        return m.from == make_square(4,0);
+    });
+    CHECK(king_moves == 5); // d1,f1,d2,e2,f2
+}
+
+TEST_CASE("knight does not capture its own pieces") {
+    // White knight b1 with pawns on d2; only a3, c3, d2(own->blocked) ...
+    Board b = board_from_fen("4k3/8/8/8/8/8/3P4/1N2K3 w - - 0 1");
+    auto moves = generate_pseudo_legal(b);
+    CHECK_FALSE(has_move(moves, make_square(1,0), make_square(3,1))); // Nxd2 own pawn: illegal
+    CHECK(has_move(moves, make_square(1,0), make_square(0,2)));       // Na3
+    CHECK(has_move(moves, make_square(1,0), make_square(2,2)));       // Nc3
+}

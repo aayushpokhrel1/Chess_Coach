@@ -22,6 +22,21 @@ bool ray_hits(const Board& b, int f, int r, const int dirs[4][2],
     }
     return false;
 }
+
+void gen_offsets(const Board& b, Square s, const int offs[8][2], int n,
+                 std::vector<Move>& out) {
+    Color us = b.squares[s].color;
+    int f = file_of(s), r = rank_of(s);
+    for (int i = 0; i < n; i++) {
+        int nf = f + offs[i][0], nr = r + offs[i][1];
+        if (!on_board(nf, nr)) continue;
+        Square to = make_square(nf, nr);
+        if (b.squares[to].color == us) continue; // friendly piece blocks
+        out.push_back(Move{s, to, PieceType::None, MoveFlag::Normal});
+    }
+}
+
+const int KING[8][2] = {{1,0},{-1,0},{0,1},{0,-1},{1,1},{1,-1},{-1,1},{-1,-1}};
 } // namespace
 
 bool is_square_attacked(const Board& b, Square sq, Color by) {
@@ -65,4 +80,19 @@ bool in_check(const Board& b, Color side) {
             return is_square_attacked(b, s, them);
     }
     return false; // no king on board (not expected in legal positions)
+}
+
+std::vector<Move> generate_pseudo_legal(const Board& b) {
+    std::vector<Move> out;
+    Color us = b.side_to_move;
+    for (Square s = 0; s < 64; s++) {
+        Piece p = b.squares[s];
+        if (p.color != us) continue;
+        switch (p.type) {
+            case PieceType::Knight: gen_offsets(b, s, KNIGHT, 8, out); break;
+            case PieceType::King:   gen_offsets(b, s, KING,   8, out); break;
+            default: break; // pawns, sliders added in later tasks
+        }
+    }
+    return out;
 }
