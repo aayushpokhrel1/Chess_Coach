@@ -1,3 +1,6 @@
+# Generated knowledge graph (rebuilt by the graphify post-commit hook)
+graphify-out/
+
 # Build artifacts
 build/
 *.o

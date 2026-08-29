@@ -31,32 +31,50 @@ joined at the UCI protocol. See [README.md](README.md),
 ## Current status
 
 - **Milestone 1:** toolchain + tested board representation with FEN.
-- **On:** Task 1 (toolchain + CMake skeleton + doctest). Not started.
-- **Blocker:** waiting on the user to install the MSYS2 toolchain (only the user
-  can do this). Build/test steps cannot run until `g++ && cmake && ninja` all
-  report versions.
+- **On:** Task 2 (core value types). Not started.
+- **Blocker:** none. Toolchain is installed and the build/test loop is proven
+  (g++ 16.1.0, cmake 4.3.3, ninja 1.13.2 via MSYS2 UCRT64).
 
 Task checklist (from the plan):
-- [ ] Task 1: toolchain + CMake skeleton + doctest smoke test
+- [x] Task 1: toolchain + CMake skeleton + doctest smoke test (commit d821af8)
 - [ ] Task 2: core value types (color, piece, square)
 - [ ] Task 3: Board struct + FEN parsing
 - [ ] Task 4: FEN generation + round-trip tests
 
+## Coaching note (important, see memory)
+
+Aayush is LEARNING C++ here and wants to be coached THROUGH each task
+interactively: one concept at a time, why before code, check understanding, let
+him drive the pace. Do NOT build the whole task then hand over a summary, that
+reads as skipping him. (Memory: `coaching-style-interactive`.)
+
+## Running the build (Windows quirks)
+
+- The Bash tool (git-bash) does NOT see the MSYS2 toolchain. Run cmake/ninja/ctest
+  via PowerShell, refreshing PATH first:
+  `$env:Path = [Environment]::GetEnvironmentVariable("Path","User") + ";" + [Environment]::GetEnvironmentVariable("Path","Machine")`
+- Full loop:
+  `cmake -S engine -B engine/build -G Ninja; cmake --build engine/build; ctest --test-dir engine/build --output-on-failure`
+- **Gotcha (fixed):** the test exe is `-static` linked on purpose. Without it the
+  exe loads an older `libstdc++` from Git for Windows' bundled MinGW (earlier on
+  PATH) and dies at startup with `0xc0000139`. Keep `-static`.
+
 ## Next action
 
-1. User installs toolchain (plan Task 1, Step 1) and confirms three versions.
-2. Subagent scaffolds Task 1 files (CMakeLists, download `doctest.h`, stubs,
-   smoke test).
-3. Build → watch smoke test fail → fix → pass → commit. Coach through CMake +
-   doctest + the `.hpp`/`.cpp` split.
-
-## Open question for next session
-
-- Scaffold Task 1 files before the toolchain is installed (ready to build), or
-  keep strictly in order? Either is fine.
+Task 2: core value types (`Color`, `PieceType`, `Piece`, `Square`, char
+conversions), test-first, in `engine/src/types.{hpp,cpp}` and
+`engine/tests/test_types.cpp` (empty stubs already exist). Teach the `.hpp`/`.cpp`
+split and `enum class` as we go. A mini-lesson on the compilation model (header =
+promises, source = bodies, linker connects them) is mid-flight, waiting on
+Aayush's answer to a check question.
 
 ## Session log
 
+- **2026-08-28:** Toolchain installed (MSYS2 UCRT64). Scaffolded and completed
+  Task 1: CMake skeleton, vendored doctest 2.4.11, proved the test loop (smoke
+  test fail then pass), fixed a MinGW DLL startup crash with `-static`. Committed
+  (d821af8). Course-corrected on coaching style: teach interactively, not a
+  post-hoc summary. Explained Task 1 in full. Task 2 not yet started.
 - **2026-08-27:** Brainstormed and locked the design (two tracks, UCI seam).
   Wrote and committed the spec, the Milestone 1 plan, and the README. No code
   yet. Repo is local only until pushed to GitHub.
