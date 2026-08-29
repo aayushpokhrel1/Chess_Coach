@@ -18,7 +18,8 @@ in our own engine as it matures. Neither track blocks the other.
 ## Docs
 
 - Design spec: [docs/superpowers/specs/2026-08-27-chess-coach-design.md](docs/superpowers/specs/2026-08-27-chess-coach-design.md)
-- Current plan: [docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md)
+- Current plan: [docs/superpowers/plans/2026-08-29-engine-m2-move-generation.md](docs/superpowers/plans/2026-08-29-engine-m2-move-generation.md)
+- Done: [Milestone 1 plan (board + FEN)](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md)
 
 ## Status
 
