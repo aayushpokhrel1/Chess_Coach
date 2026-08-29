@@ -24,14 +24,13 @@ in our own engine as it matures. Neither track blocks the other.
 ## Status
 
 **Milestone 1 (complete):** C++ toolchain + tested board representation with FEN
-(parse, generate, round-trip). All tests green.
+(parse, generate, round-trip).
 
-- [x] Task 1: toolchain + CMake skeleton + doctest
-- [x] Task 2: core value types (color, piece, square)
-- [x] Task 3: Board struct + FEN parsing
-- [x] Task 4: FEN generation + round-trip tests
+**Milestone 2 (complete):** legal move generation (all pieces, castling, en
+passant, promotion) + `perft` verified against published counts for the start
+position, Kiwipete, and CPW Position 3. Copy-make; make/unmake comes in M3.
 
-Next milestone: legal move generation + perft.
+Next milestone: make/unmake move (state discipline), verified by unchanged perft.
 
 ## Build (once the toolchain is installed)
 
