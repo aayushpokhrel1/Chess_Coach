@@ -197,3 +197,13 @@ std::vector<Move> generate_pseudo_legal(const Board& b) {
     gen_castling(b, out);
     return out;
 }
+
+std::vector<Move> generate_legal(const Board& b) {
+    std::vector<Move> out;
+    Color us = b.side_to_move;
+    for (const Move& m : generate_pseudo_legal(b)) {
+        if (!in_check(make_move(b, m), us))
+            out.push_back(m);
+    }
+    return out;
+}

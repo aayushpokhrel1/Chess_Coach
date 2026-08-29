@@ -170,3 +170,32 @@ TEST_CASE("cannot castle out of check") {
     CHECK_FALSE(has_move(moves, make_square(4,0), make_square(6,0)));
     CHECK_FALSE(has_move(moves, make_square(4,0), make_square(2,0)));
 }
+
+TEST_CASE("a pinned piece cannot move off the pin") {
+    // White king e1, white knight e2, black rook e8: the knight is pinned.
+    Board b = board_from_fen("4r3/8/8/8/8/8/4N3/4K3 w - - 0 1");
+    auto legal = generate_legal(b);
+    // Any knight move exposes the king, so none is legal.
+    CHECK(moves_from(legal, make_square(4,1)) == 0);
+    // The king may still step aside off the e-file.
+    CHECK(has_move(legal, make_square(4,0), make_square(3,0))); // Kd1
+}
+
+TEST_CASE("in check, only moves that resolve the check are legal") {
+    // Black rook e8 checks white Ke1; white also has a rook a1 that cannot help.
+    Board b = board_from_fen("4r3/8/8/8/8/8/8/R3K3 w - - 0 1");
+    auto legal = generate_legal(b);
+    // Every legal move must leave the white king safe.
+    for (const Move& m : legal) {
+        CHECK_FALSE(in_check(make_move(b, m), Color::White));
+    }
+    // The only escapes are king steps off the e-file (Ra1 cannot reach or block e-file).
+    CHECK(has_move(legal, make_square(4,0), make_square(3,0))); // Kd1
+    CHECK(has_move(legal, make_square(4,0), make_square(5,0))); // Kf1
+    CHECK(generate_legal(b).size() == 4); // Kd1, Kf1, Kd2, Kf2
+}
+
+TEST_CASE("start position has exactly 20 legal moves") {
+    Board b = start_position();
+    CHECK(generate_legal(b).size() == 20);
+}
