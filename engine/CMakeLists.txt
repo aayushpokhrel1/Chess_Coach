@@ -10,6 +10,7 @@ add_library(engine
     src/board.cpp
     src/move.cpp
     src/movegen.cpp
+    src/perft.cpp
 )
 target_include_directories(engine PUBLIC src)
 
@@ -20,6 +21,7 @@ add_executable(engine_tests
     tests/test_board.cpp
     tests/test_move.cpp
     tests/test_movegen.cpp
+    tests/test_perft.cpp
 )
 target_link_libraries(engine_tests PRIVATE engine)
 target_include_directories(engine_tests PRIVATE third_party)
