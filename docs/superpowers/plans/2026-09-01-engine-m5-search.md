@@ -79,7 +79,7 @@ TEST_CASE("search grabs a free queen") {
     SearchResult r = search(b, 2);
     CHECK(r.best.from == make_square(3, 0)); // d1
     CHECK(r.best.to   == make_square(3, 2)); // d3
-    CHECK(r.score > 500);                    // up roughly a queen
+    CHECK(r.score > 400);                    // clearly ahead (a rook up after being down)
 }
 
 TEST_CASE("search finds mate in one") {
