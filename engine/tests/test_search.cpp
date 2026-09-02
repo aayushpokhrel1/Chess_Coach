@@ -28,3 +28,17 @@ TEST_CASE("stalemate scores zero and reports no move") {
     CHECK(r.score == 0);
     CHECK(r.best.from == NO_SQUARE);
 }
+
+TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer nodes") {
+    // A busy midgame position (after 1.e4 e5) so pruning has something to cut.
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+
+    int full = search_minimax(b, 3);
+    long full_nodes = nodes_searched();
+
+    int pruned = search(b, 3).score;
+    long pruned_nodes = nodes_searched();
+
+    CHECK(pruned == full);              // pruning must not change the value
+    CHECK(pruned_nodes < full_nodes);   // but it must visit fewer nodes
+}
