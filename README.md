@@ -14,11 +14,12 @@ speed**: get the rules provably right with simple data structures first, optimiz
 later. Progress is deliberate and milestone-by-milestone, each step tested before the
 next begins.
 
-Today the engine can represent any position, round-trip it through FEN, and generate
-all legal moves, with correctness proven by `perft` (leaf-node counts matching
-published reference numbers). It does not yet search or evaluate, so it does not yet
-play; that comes in later milestones. Until the engine can play, the coaching side
-uses **Stockfish** for analysis.
+Today the engine represents any position and round-trips it through FEN, generates all
+legal moves (correctness proven by `perft`, leaf-node counts matching published reference
+numbers), evaluates positions (material plus piece-square tables), searches with negamax,
+alpha-beta pruning, and iterative deepening, and **plays a full game over UCI under real
+time controls**. The coaching side can now drive our own engine at the same UCI socket it
+uses for **Stockfish**, and the two can analyze the same position side by side.
 
 ## Two tracks, one seam
 
@@ -41,9 +42,11 @@ Engine milestones (correctness before speed):
   promotion; `perft` matches published counts (start, Kiwipete, CPW Position 3).
 - [x] **M3. Make / unmake** — in-place move/undo with a small undo record,
   replacing copy-make on the perft hot path; perft counts unchanged.
-- [ ] **M4. Evaluation v1** — material, then piece-square tables.
-- [ ] **M5. Search** — minimax to alpha-beta to iterative deepening.
-- [ ] **M6. UCI interface** — play a full game vs Stockfish through a GUI.
+- [x] **M4. Evaluation v1** — material, then piece-square tables (side-to-move perspective).
+- [x] **M5. Search** — negamax with alpha-beta pruning and iterative deepening; stops
+  hanging a queen, finds mate in one, then mate in two.
+- [x] **M6. UCI interface** — `chess_engine` executable speaks UCI (`position`, `go`,
+  `bestmove`) with real time management; plays a full game in a GUI.
 - [ ] **M7. WASM + optimization** (later) — bitboards, transposition table, move
   ordering; run in the browser.
 
@@ -63,6 +66,15 @@ ctest --test-dir engine/build --output-on-failure
 On Windows the MSYS2 toolchain may not be on the default PATH; run the commands from a
 shell where `C:\msys64\ucrt64\bin` is on PATH.
 
+The build produces `engine/build/chess_engine.exe`, a UCI engine you can load into a chess
+GUI (Arena, CuteChess) or drive by hand:
+
+```
+uci
+position startpos moves e2e4
+go movetime 1000
+```
+
 ## Layout
 
 ```
@@ -77,4 +89,6 @@ docs/     # design spec and per-milestone implementation plans
 - Plans: [M1 board + FEN](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md),
   [M2 move generation + perft](docs/superpowers/plans/2026-08-29-engine-m2-move-generation.md),
   [M3 make / unmake](docs/superpowers/plans/2026-09-01-engine-m3-make-unmake.md),
-  [M4 evaluation v1](docs/superpowers/plans/2026-09-01-engine-m4-evaluation.md)
+  [M4 evaluation v1](docs/superpowers/plans/2026-09-01-engine-m4-evaluation.md),
+  [M5 search](docs/superpowers/plans/2026-09-01-engine-m5-search.md),
+  [M6 UCI interface](docs/superpowers/plans/2026-09-02-engine-m6-uci.md)
