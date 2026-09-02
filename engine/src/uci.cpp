@@ -1,6 +1,8 @@
 #include "uci.hpp"
 #include "movegen.hpp"
 #include "types.hpp"
+#include <sstream>
+#include <vector>
 
 Move move_from_uci(Board& b, const std::string& uci) {
     if (uci.size() < 4) return Move{};
@@ -31,4 +33,60 @@ Move move_from_uci(Board& b, const std::string& uci) {
         }
     }
     return Move{};   // no legal move matched
+}
+
+namespace {
+std::vector<std::string> split_ws(const std::string& s) {
+    std::istringstream iss(s);
+    std::vector<std::string> out;
+    std::string t;
+    while (iss >> t) out.push_back(t);
+    return out;
+}
+} // namespace
+
+std::string handle_command(UciState& state, const std::string& line) {
+    std::vector<std::string> tok = split_ws(line);
+    if (tok.empty()) return "";
+    const std::string& cmd = tok[0];
+
+    if (cmd == "uci")
+        return "id name ChessCoach\nid author Aayush Pokhrel\nuciok";
+    if (cmd == "isready")
+        return "readyok";
+    if (cmd == "ucinewgame") {
+        state.board = start_position();
+        return "";
+    }
+    if (cmd == "quit")
+        return "";
+
+    if (cmd == "position") {
+        size_t i = 1;
+        if (i < tok.size() && tok[i] == "startpos") {
+            state.board = start_position();
+            i++;
+        } else if (i < tok.size() && tok[i] == "fen") {
+            i++;
+            std::string fen;
+            for (int f = 0; f < 6 && i < tok.size(); f++, i++) {
+                if (f) fen += " ";
+                fen += tok[i];
+            }
+            state.board = board_from_fen(fen);
+        }
+        if (i < tok.size() && tok[i] == "moves") {
+            i++;
+            for (; i < tok.size(); i++) {
+                Move m = move_from_uci(state.board, tok[i]);
+                if (m.from != NO_SQUARE) make_move(state.board, m);
+            }
+        }
+        return "";
+    }
+
+    if (cmd == "go")
+        return "";   // implemented in Task 4
+
+    return "";       // ignore unknown commands
 }
