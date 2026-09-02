@@ -76,4 +76,5 @@ docs/     # design spec and per-milestone implementation plans
 - Design spec: [docs/superpowers/specs/2026-08-27-chess-coach-design.md](docs/superpowers/specs/2026-08-27-chess-coach-design.md)
 - Plans: [M1 board + FEN](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md),
   [M2 move generation + perft](docs/superpowers/plans/2026-08-29-engine-m2-move-generation.md),
-  [M3 make / unmake](docs/superpowers/plans/2026-09-01-engine-m3-make-unmake.md)
+  [M3 make / unmake](docs/superpowers/plans/2026-09-01-engine-m3-make-unmake.md),
+  [M4 evaluation v1](docs/superpowers/plans/2026-09-01-engine-m4-evaluation.md)
