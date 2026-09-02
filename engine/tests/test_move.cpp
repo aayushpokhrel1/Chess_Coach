@@ -2,9 +2,19 @@
 #include "board.hpp"
 #include "move.hpp"
 
-// Apply one move to a FEN and compare the resulting FEN.
+// Apply one move in place and read back the resulting FEN.
 static std::string after(const char* fen, const Move& m) {
-    return fen_from_board(make_move(board_from_fen(fen), m));
+    Board b = board_from_fen(fen);
+    make_move(b, m);
+    return fen_from_board(b);
+}
+
+// Make then unmake; the board must return to exactly the input FEN.
+static std::string roundtrip(const char* fen, const Move& m) {
+    Board b = board_from_fen(fen);
+    Undo u = make_move(b, m);
+    unmake_move(b, m, u);
+    return fen_from_board(b);
 }
 
 TEST_CASE("to_uci formats squares and promotion") {
@@ -58,4 +68,31 @@ TEST_CASE("moving a rook strips only its own castling right") {
     Move ra1b1{make_square(0,0), make_square(1,0), PieceType::None, MoveFlag::Normal};
     CHECK(after("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", ra1b1)
           == "r3k2r/8/8/8/8/8/8/1R2K2R b Kkq - 1 1");
+}
+
+TEST_CASE("make then unmake restores the position exactly") {
+    Move nf3{make_square(6,0), make_square(5,2), PieceType::None, MoveFlag::Normal};
+    Move e4{make_square(4,1), make_square(4,3), PieceType::None, MoveFlag::DoublePawnPush};
+    Move exd5{make_square(4,3), make_square(3,4), PieceType::None, MoveFlag::Normal};
+    Move epc{make_square(4,4), make_square(3,5), PieceType::None, MoveFlag::EnPassant};
+    Move promo{make_square(0,6), make_square(0,7), PieceType::Queen, MoveFlag::Promotion};
+    Move castle{make_square(4,0), make_square(6,0), PieceType::None, MoveFlag::Castle};
+    Move rookmove{make_square(0,0), make_square(1,0), PieceType::None, MoveFlag::Normal};
+
+    const char* start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    CHECK(roundtrip(start, nf3) == start);
+    CHECK(roundtrip(start, e4)  == start);
+
+    const char* cap = "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2";
+    CHECK(roundtrip(cap, exd5) == cap);
+
+    const char* ep = "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
+    CHECK(roundtrip(ep, epc) == ep);
+
+    const char* pr = "8/P7/8/8/8/8/8/4k2K w - - 0 1";
+    CHECK(roundtrip(pr, promo) == pr);
+
+    const char* cr = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+    CHECK(roundtrip(cr, castle)   == cr);
+    CHECK(roundtrip(cr, rookmove) == cr);
 }

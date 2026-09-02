@@ -187,7 +187,9 @@ TEST_CASE("in check, only moves that resolve the check are legal") {
     auto legal = generate_legal(b);
     // Every legal move must leave the white king safe.
     for (const Move& m : legal) {
-        CHECK_FALSE(in_check(make_move(b, m), Color::White));
+        Board nb = b;
+        make_move(nb, m);
+        CHECK_FALSE(in_check(nb, Color::White));
     }
     // The only escapes are king steps off the e-file (Ra1 cannot reach or block e-file).
     CHECK(has_move(legal, make_square(4,0), make_square(3,0))); // Kd1

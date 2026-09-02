@@ -202,7 +202,9 @@ std::vector<Move> generate_legal(const Board& b) {
     std::vector<Move> out;
     Color us = b.side_to_move;
     for (const Move& m : generate_pseudo_legal(b)) {
-        if (!in_check(make_move(b, m), us))
+        Board nb = b;
+        make_move(nb, m);
+        if (!in_check(nb, us))
             out.push_back(m);
     }
     return out;
