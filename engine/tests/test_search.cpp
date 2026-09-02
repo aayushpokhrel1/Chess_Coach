@@ -1,6 +1,7 @@
 #include "doctest.h"
 #include "board.hpp"
 #include "move.hpp"
+#include "movegen.hpp"
 #include "search.hpp"
 
 TEST_CASE("search grabs a free queen") {
@@ -57,4 +58,35 @@ TEST_CASE("search finds mate in two") {
     Board b = board_from_fen("r5k1/5ppp/8/8/8/8/4RPPP/4R1K1 w - - 0 1");
     CHECK(search(b, 2).score < 29000);   // too shallow to see the mate
     CHECK(search(b, 4).score > 29000);   // deep enough: forced mate found
+}
+
+TEST_CASE("timed search returns a legal move under a tiny budget") {
+    Board b = start_position();
+    SearchLimits lim;
+    lim.max_depth = 64;
+    lim.budget_ms = 5;
+    SearchResult r = search_timed(b, lim);
+    REQUIRE(r.best.from != NO_SQUARE);
+    bool legal = false;
+    for (const Move& m : generate_legal(b))
+        if (m.from == r.best.from && m.to == r.best.to) legal = true;
+    CHECK(legal);
+}
+
+TEST_CASE("timed search with a depth cap and no clock matches a fixed-depth search") {
+    Board b = start_position();
+    SearchLimits lim;
+    lim.max_depth = 3;
+    lim.budget_ms = 0;   // no time limit: pure depth
+    SearchResult r = search_timed(b, lim);
+    CHECK(r.score == search_to_depth(b, 3).score);
+}
+
+TEST_CASE("timed search finds mate in two with room to think") {
+    Board b = board_from_fen("r5k1/5ppp/8/8/8/8/4RPPP/4R1K1 w - - 0 1");
+    SearchLimits lim;
+    lim.max_depth = 6;
+    lim.budget_ms = 2000;
+    SearchResult r = search_timed(b, lim);
+    CHECK(r.score > 29000);
 }
