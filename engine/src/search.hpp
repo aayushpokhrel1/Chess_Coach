@@ -14,3 +14,8 @@ SearchResult search(Board& b, int depth);  // fixed-depth negamax
 // so a test can prove alpha-beta prunes without changing the answer.
 int  search_minimax(Board& b, int depth);
 long nodes_searched();  // nodes visited by the most recent search / search_minimax call
+
+// One fixed-depth alpha-beta search. If `first` is a real move (from != NO_SQUARE)
+// it is searched first at the root; the iterative-deepening driver passes the
+// previous iteration's best move here to improve ordering.
+SearchResult search_to_depth(Board& b, int depth, Move first = Move{});

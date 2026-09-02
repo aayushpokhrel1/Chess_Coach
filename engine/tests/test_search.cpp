@@ -42,3 +42,19 @@ TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer n
     CHECK(pruned == full);              // pruning must not change the value
     CHECK(pruned_nodes < full_nodes);   // but it must visit fewer nodes
 }
+
+TEST_CASE("iterative deepening matches a single fixed-depth search") {
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+    SearchResult id    = search(b, 3);
+    SearchResult fixed = search_to_depth(b, 3);
+    CHECK(id.score     == fixed.score);
+    CHECK(id.best.from == fixed.best.from);
+    CHECK(id.best.to   == fixed.best.to);
+}
+
+TEST_CASE("search finds mate in two") {
+    // Doubled rooks on the e-file: 1.Re8+ Rxe8 2.Rxe8# (f7/g7/h7 seal the back rank).
+    Board b = board_from_fen("r5k1/5ppp/8/8/8/8/4RPPP/4R1K1 w - - 0 1");
+    CHECK(search(b, 2).score < 29000);   // too shallow to see the mate
+    CHECK(search(b, 4).score > 29000);   // deep enough: forced mate found
+}

@@ -420,8 +420,8 @@ TEST_CASE("iterative deepening matches a single fixed-depth search") {
 }
 
 TEST_CASE("search finds mate in two") {
-    // 1.Re8+ Rxe8 2.Rxe8# (the f7/g7/h7 pawns seal the back rank).
-    Board b = board_from_fen("r5k1/5ppp/8/8/8/8/5PPP/3RR1K1 w - - 0 1");
+    // Doubled rooks on the e-file: 1.Re8+ Rxe8 2.Rxe8# (f7/g7/h7 seal the back rank).
+    Board b = board_from_fen("r5k1/5ppp/8/8/8/8/4RPPP/4R1K1 w - - 0 1");
     CHECK(search(b, 2).score < 29000);   // too shallow to see the mate
     CHECK(search(b, 4).score > 29000);   // deep enough: forced mate found
 }

@@ -70,7 +70,7 @@ int search_minimax(Board& b, int depth) {
     return negamax_full(b, depth, 0);
 }
 
-SearchResult search(Board& b, int depth) {
+SearchResult search_to_depth(Board& b, int depth, Move first) {
     g_nodes = 0;
     SearchResult result;
     result.best = Move{};
@@ -83,6 +83,14 @@ SearchResult search(Board& b, int depth) {
     }
 
     order_moves(b, moves);
+    // Try the hint move first (from the previous, shallower iteration).
+    if (first.from != NO_SQUARE) {
+        auto it = std::find_if(moves.begin(), moves.end(), [&](const Move& m) {
+            return m.from == first.from && m.to == first.to && m.promotion == first.promotion;
+        });
+        if (it != moves.end()) std::rotate(moves.begin(), it, it + 1);
+    }
+
     int best = -INF;
     int alpha = -INF;
     for (const Move& m : moves) {
@@ -96,5 +104,15 @@ SearchResult search(Board& b, int depth) {
         if (best > alpha) alpha = best;
     }
     result.score = best;
+    return result;
+}
+
+SearchResult search(Board& b, int max_depth) {
+    SearchResult result;
+    result.best = Move{};
+    result.score = 0;
+    for (int d = 1; d <= max_depth; d++) {
+        result = search_to_depth(b, d, result.best);  // reuse previous best for ordering
+    }
     return result;
 }
