@@ -24,3 +24,20 @@ TEST_CASE("evaluate is from the side-to-move perspective") {
     CHECK(evaluate(blackToMove) < 0);                 // bad for the mover (Black)
     CHECK(evaluate(whiteToMove) == -evaluate(blackToMove)); // exact negatives
 }
+
+TEST_CASE("a knight is worth more in the center than in the corner") {
+    // Same material (lone white knight + kings); only the knight's square differs.
+    Board center = board_from_fen("4k3/8/8/8/3N4/8/8/4K3 w - - 0 1"); // Nd4
+    Board corner = board_from_fen("4k3/8/8/8/8/8/8/N3K3 w - - 0 1");   // Na1
+    CHECK(evaluate(center) > evaluate(corner));
+}
+
+TEST_CASE("piece-square tables keep the start position balanced") {
+    CHECK(evaluate(start_position()) == 0);
+}
+
+TEST_CASE("piece-square tables move the score off pure material") {
+    // An advanced, centralized white pawn should read higher than its raw 100.
+    Board b = board_from_fen("4k3/8/8/3P4/8/8/8/4K3 w - - 0 1"); // white pawn d5
+    CHECK(evaluate(b) != material_score(b));
+}
