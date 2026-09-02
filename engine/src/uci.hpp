@@ -16,3 +16,7 @@ struct UciState {
 // multiple lines, with no trailing newline). Updates state for position /
 // ucinewgame. Unknown commands return "".
 std::string handle_command(UciState& state, const std::string& line);
+
+// Per-move time budget (ms) from the remaining clock and increment for the side
+// to move. Exposed for testing.
+long long budget_for_clock(long long remaining_ms, long long inc_ms);

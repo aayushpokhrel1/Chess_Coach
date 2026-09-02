@@ -1,8 +1,10 @@
 #include "uci.hpp"
 #include "movegen.hpp"
 #include "types.hpp"
+#include "search.hpp"
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 Move move_from_uci(Board& b, const std::string& uci) {
     if (uci.size() < 4) return Move{};
@@ -35,6 +37,17 @@ Move move_from_uci(Board& b, const std::string& uci) {
     return Move{};   // no legal move matched
 }
 
+long long budget_for_clock(long long remaining_ms, long long inc_ms) {
+    // ponytail: crude 1/20th-of-clock split plus half the increment; tune only
+    //           if the engine flags or dawdles in real games.
+    long long budget = remaining_ms / 20 + inc_ms / 2;
+    long long cap = remaining_ms - 30;   // keep a safety margin, never spend it all
+    if (cap < 1) cap = 1;
+    if (budget > cap) budget = cap;
+    if (budget < 1) budget = 1;
+    return budget;
+}
+
 namespace {
 std::vector<std::string> split_ws(const std::string& s) {
     std::istringstream iss(s);
@@ -42,6 +55,45 @@ std::vector<std::string> split_ws(const std::string& s) {
     std::string t;
     while (iss >> t) out.push_back(t);
     return out;
+}
+
+SearchLimits compute_limits(const Board& b, const std::vector<std::string>& tok) {
+    SearchLimits lim;
+    long long movetime = 0, wtime = 0, btime = 0, winc = 0, binc = 0;
+    int depth = 0;
+    bool infinite = false;
+    for (size_t i = 1; i < tok.size(); i++) {
+        if (tok[i] == "infinite") { infinite = true; continue; }
+        if (i + 1 >= tok.size()) continue;
+        const std::string& v = tok[i + 1];
+        if      (tok[i] == "movetime") movetime = std::atoll(v.c_str());
+        else if (tok[i] == "wtime")    wtime    = std::atoll(v.c_str());
+        else if (tok[i] == "btime")    btime    = std::atoll(v.c_str());
+        else if (tok[i] == "winc")     winc     = std::atoll(v.c_str());
+        else if (tok[i] == "binc")     binc     = std::atoll(v.c_str());
+        else if (tok[i] == "depth")    depth    = std::atoi(v.c_str());
+    }
+
+    if (depth > 0) { lim.max_depth = depth; lim.budget_ms = 0; return lim; } // fixed depth
+    if (infinite)  { lim.max_depth = 64;    lim.budget_ms = 0; return lim; } // depth cap only
+    if (movetime > 0) {
+        lim.budget_ms = movetime > 10 ? movetime - 5 : movetime;  // small safety margin
+        return lim;
+    }
+    long long remaining = (b.side_to_move == Color::White) ? wtime : btime;
+    long long inc       = (b.side_to_move == Color::White) ? winc  : binc;
+    if (remaining > 0) { lim.budget_ms = budget_for_clock(remaining, inc); return lim; }
+
+    lim.max_depth = 5;   // nothing specified: a safe default depth
+    lim.budget_ms = 0;
+    return lim;
+}
+
+std::string handle_go(UciState& state, const std::vector<std::string>& tok) {
+    SearchLimits lim = compute_limits(state.board, tok);
+    SearchResult r = search_timed(state.board, lim);
+    if (r.best.from == NO_SQUARE) return "bestmove 0000";   // no legal move
+    return "bestmove " + to_uci(r.best);
 }
 } // namespace
 
@@ -86,7 +138,7 @@ std::string handle_command(UciState& state, const std::string& line) {
     }
 
     if (cmd == "go")
-        return "";   // implemented in Task 4
+        return handle_go(state, tok);
 
     return "";       // ignore unknown commands
 }

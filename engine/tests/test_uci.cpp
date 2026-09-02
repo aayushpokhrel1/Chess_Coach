@@ -50,3 +50,26 @@ TEST_CASE("position fen sets the board") {
     std::string fen = fen_from_board(s.board);
     CHECK(fen.rfind("4k3/8/8/8/8/8/8/4K3", 0) == 0);
 }
+
+TEST_CASE("budget_for_clock splits the clock sanely") {
+    CHECK(budget_for_clock(600000, 0) == 30000); // 10 min -> ~30s
+    CHECK(budget_for_clock(60000, 1000) == 3500);  // 60s + 1s inc -> 3000 + 500
+    CHECK(budget_for_clock(20, 0) >= 1);           // tiny clock still yields >= 1ms
+}
+
+TEST_CASE("go depth returns a legal bestmove") {
+    UciState s;
+    handle_command(s, "position startpos");
+    std::string r = handle_command(s, "go depth 2");
+    REQUIRE(r.rfind("bestmove ", 0) == 0);
+    std::string mv = r.substr(9);
+    Move m = move_from_uci(s.board, mv);
+    CHECK(m.from != NO_SQUARE);   // the printed move is legal
+}
+
+TEST_CASE("go movetime returns a bestmove quickly") {
+    UciState s;
+    handle_command(s, "position startpos");
+    std::string r = handle_command(s, "go movetime 50");
+    CHECK(r.rfind("bestmove ", 0) == 0);
+}
