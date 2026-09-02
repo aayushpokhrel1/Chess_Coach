@@ -39,8 +39,8 @@ Engine milestones (correctness before speed):
 - [x] **M1. Board + FEN** — 64-square board, parse and generate FEN, round-trip tested.
 - [x] **M2. Legal move generation + perft** — all pieces, castling, en passant,
   promotion; `perft` matches published counts (start, Kiwipete, CPW Position 3).
-- [ ] **M3. Make / unmake** — in-place move/undo (state discipline), verified by
-  unchanged perft.
+- [x] **M3. Make / unmake** — in-place move/undo with a small undo record,
+  replacing copy-make on the perft hot path; perft counts unchanged.
 - [ ] **M4. Evaluation v1** — material, then piece-square tables.
 - [ ] **M5. Search** — minimax to alpha-beta to iterative deepening.
 - [ ] **M6. UCI interface** — play a full game vs Stockfish through a GUI.
