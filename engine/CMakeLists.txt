@@ -39,3 +39,10 @@ target_link_options(engine_tests PRIVATE -static)
 
 enable_testing()
 add_test(NAME engine_tests COMMAND engine_tests)
+
+# The UCI engine executable a chess GUI launches.
+add_executable(chess_engine src/main.cpp)
+target_link_libraries(chess_engine PRIVATE engine)
+target_include_directories(chess_engine PRIVATE src)
+# Same static-link fix as the test exe (avoid loading an older libstdc++ on PATH).
+target_link_options(chess_engine PRIVATE -static)
