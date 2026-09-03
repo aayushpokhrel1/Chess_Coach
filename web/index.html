@@ -8,7 +8,14 @@
   <body>
     <main id="app">
       <h1>Chess Coach</h1>
+      <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
+      <button id="load">Load</button>
       <div id="board" class="board"></div>
+      <div id="nav">
+        <button id="prev">&larr;</button>
+        <span id="ply">-</span>
+        <button id="next">&rarr;</button>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
