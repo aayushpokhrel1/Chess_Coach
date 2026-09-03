@@ -39,6 +39,33 @@ const DEPTH = 12;
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const $ = (id: string) => document.getElementById(id)!;
 
+// Remember the inputs (not the analysis) across refreshes.
+const SAVE_KEYS = ['pgn', 'username', 'fetchUser'] as const;
+function saveSession() {
+  try {
+    const data: Record<string, string> = { source: ($('source') as HTMLSelectElement).value };
+    for (const k of SAVE_KEYS) data[k] = ($(k) as HTMLInputElement | HTMLTextAreaElement).value;
+    localStorage.setItem('chesscoach', JSON.stringify(data));
+  } catch {
+    /* ignore storage errors (private mode, quota) */
+  }
+}
+function restoreSession() {
+  try {
+    const raw = localStorage.getItem('chesscoach');
+    if (!raw) return;
+    const data = JSON.parse(raw) as Record<string, string>;
+    for (const k of SAVE_KEYS) if (data[k] != null) ($(k) as HTMLInputElement).value = data[k];
+    if (data.source) ($('source') as HTMLSelectElement).value = data.source;
+  } catch {
+    /* ignore */
+  }
+}
+restoreSession();
+['pgn', 'username', 'fetchUser', 'source'].forEach((id) =>
+  $(id).addEventListener('input', saveSession),
+);
+
 function buildMoveList() {
   const ol = $('moves');
   ol.innerHTML = '';
