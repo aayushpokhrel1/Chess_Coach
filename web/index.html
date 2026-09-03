@@ -9,13 +9,24 @@
     <main id="app">
       <h1>Chess Coach</h1>
       <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
-      <button id="load">Load</button>
-      <button id="analyze">Analyze</button>
-      <div id="board" class="board"></div>
-      <div id="nav">
-        <button id="prev">&larr;</button>
-        <span id="ply">-</span>
-        <button id="next">&rarr;</button>
+      <div class="controls">
+        <button id="load">Load</button>
+        <button id="analyze">Analyze</button>
+        <span id="status"></span>
+      </div>
+      <div class="layout">
+        <div>
+          <div id="board" class="board"></div>
+          <div id="nav">
+            <button id="prev">&larr;</button>
+            <span id="ply">-</span>
+            <button id="next">&rarr;</button>
+          </div>
+        </div>
+        <div class="side">
+          <div id="explain" class="explain"></div>
+          <ol id="moves" class="moves"></ol>
+        </div>
       </div>
     </main>
     <script type="module" src="/src/main.ts"></script>

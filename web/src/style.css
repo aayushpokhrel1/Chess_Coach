@@ -1,9 +1,92 @@
 body {
   font-family: system-ui, sans-serif;
   margin: 2rem;
+  color: #222;
+}
+
+#pgn {
+  width: 480px;
+  display: block;
+  font-family: monospace;
+}
+
+.controls {
+  margin: 0.5rem 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.controls #status {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
 }
 
 .board {
   width: 480px;
   height: 480px;
+}
+
+#nav {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.side {
+  width: 320px;
+}
+
+.explain {
+  min-height: 3rem;
+  padding: 0.75rem;
+  background: #f4f4f4;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.moves {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-left: 2rem;
+  margin: 0;
+}
+.moves li {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.moves li:hover {
+  background: #eee;
+}
+.moves li.active {
+  background: #dde7ff;
+}
+.moves .san {
+  font-family: monospace;
+}
+
+.badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.q-best,
+.q-good {
+  color: #393;
+}
+.q-inaccuracy {
+  color: #c90;
+}
+.q-mistake {
+  color: #d60;
+}
+.q-blunder {
+  color: #b00;
 }

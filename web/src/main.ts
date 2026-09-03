@@ -28,15 +28,46 @@ const engine = new Engine();
 const DEPTH = 12;
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+const $ = (id: string) => document.getElementById(id)!;
+
+function buildMoveList() {
+  const ol = $('moves');
+  ol.innerHTML = '';
+  moves.forEach((m, i) => {
+    const li = document.createElement('li');
+    const a = analyses[i];
+    let badge = '';
+    if (a) {
+      const loss =
+        a.quality === 'best' || a.quality === 'good'
+          ? ''
+          : a.cpLoss > 9999
+            ? ' (mate)'
+            : ` -${a.cpLoss}`;
+      badge = ` <span class="badge q-${a.quality}">${a.quality}${loss}</span>`;
+    }
+    li.innerHTML = `<span class="san">${m.san}</span>${badge}`;
+    li.addEventListener('click', () => {
+      idx = i;
+      render();
+    });
+    ol.appendChild(li);
+  });
+}
+
 function render() {
   const fen = idx < 0 ? START : moves[idx].fenAfter;
   board.set({ fen: fen.split(' ')[0] });
-  const label =
-    idx < 0
-      ? 'start'
-      : `${idx + 1}. ${moves[idx].san}` +
-        (analyses[idx] ? ` (${analyses[idx].quality}, -${analyses[idx].cpLoss}cp)` : '');
-  document.getElementById('ply')!.textContent = label;
+  $('ply').textContent = idx < 0 ? 'start' : `${idx + 1}. ${moves[idx].san}`;
+
+  // Highlight the active move.
+  Array.from($('moves').children).forEach((li, i) =>
+    li.classList.toggle('active', i === idx),
+  );
+
+  // Explanation panel.
+  const a = idx >= 0 ? analyses[idx] : undefined;
+  $('explain').textContent = a?.explanation ?? '';
 }
 
 async function analyzeGame() {
@@ -67,33 +98,37 @@ async function analyzeGame() {
       pvBefore: before.pv,
       explanation,
     });
-    document.getElementById('ply')!.textContent = `analyzing ${i + 1}/${moves.length}`;
+    $('status').textContent = `analyzing ${i + 1}/${moves.length}`;
   }
+  $('status').textContent = 'analysis complete';
+  buildMoveList();
   idx = -1;
   render();
 }
 
-document.getElementById('load')!.addEventListener('click', () => {
-  const text = (document.getElementById('pgn') as HTMLTextAreaElement).value;
+$('load').addEventListener('click', () => {
+  const text = ($('pgn') as HTMLTextAreaElement).value;
   try {
     moves = parsePgn(text);
     analyses = [];
     idx = -1;
+    $('status').textContent = `${moves.length} moves loaded`;
+    buildMoveList();
     render();
   } catch {
     alert('Could not parse that PGN.');
   }
 });
-document.getElementById('analyze')!.addEventListener('click', () => {
+$('analyze').addEventListener('click', () => {
   if (moves.length) analyzeGame();
 });
-document.getElementById('prev')!.addEventListener('click', () => {
+$('prev').addEventListener('click', () => {
   if (idx >= 0) {
     idx--;
     render();
   }
 });
-document.getElementById('next')!.addEventListener('click', () => {
+$('next').addEventListener('click', () => {
   if (idx < moves.length - 1) {
     idx++;
     render();
