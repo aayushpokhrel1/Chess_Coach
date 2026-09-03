@@ -3,6 +3,7 @@ import { setupBoard } from './board';
 import { parsePgn, type GameMove } from './pgn';
 import { Engine } from './engine';
 import { scoreToCp, classify, type Quality } from './classify';
+import { explain } from './explain';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -16,6 +17,7 @@ interface MoveAnalysis {
   bestIsMate: boolean;
   oppBest: string; // best reply at fenAfter (uci)
   pvBefore: string[];
+  explanation: string;
 }
 
 let moves: GameMove[] = [];
@@ -45,6 +47,15 @@ async function analyzeGame() {
     const evalBeforeCp = scoreToCp(before.score);
     const evalAfterMoverCp = -scoreToCp(after.score); // after: opponent to move, negate
     const { cpLoss, quality } = classify(evalBeforeCp, evalAfterMoverCp);
+    const explanation = explain({
+      fenBefore: moves[i].fenBefore,
+      playedUci: moves[i].from + moves[i].to,
+      quality,
+      bestMove: before.bestMove,
+      bestIsMate: before.score.mate !== undefined,
+      fenAfter: moves[i].fenAfter,
+      oppBest: after.bestMove,
+    });
     analyses.push({
       evalBeforeCp,
       evalAfterMoverCp,
@@ -54,6 +65,7 @@ async function analyzeGame() {
       bestIsMate: before.score.mate !== undefined,
       oppBest: after.bestMove,
       pvBefore: before.pv,
+      explanation,
     });
     document.getElementById('ply')!.textContent = `analyzing ${i + 1}/${moves.length}`;
   }
