@@ -56,7 +56,9 @@ Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI sea
   every move with Stockfish (in a Web Worker), classify each by eval swing
   (best / good / inaccuracy / mistake / blunder), and explain the mistakes in beginner
   language derived from the engine's own line.
-- [ ] **C2. Pattern detection** (later) — recurring mistakes across many games.
+- [x] **C2. Pattern detection** — paste several games, give your username, and get your
+  mistakes and blunders broken down by phase (opening/middlegame/endgame) and category
+  (hanging a piece / missing a mate / missing a capture / other), with a headline insight.
 - [ ] **C3. Drills** (later) — replay your own blunder positions as puzzles.
 
 ## Build
@@ -111,4 +113,5 @@ docs/     # design spec and per-milestone implementation plans
   [M4 evaluation v1](docs/superpowers/plans/2026-09-01-engine-m4-evaluation.md),
   [M5 search](docs/superpowers/plans/2026-09-01-engine-m5-search.md),
   [M6 UCI interface](docs/superpowers/plans/2026-09-02-engine-m6-uci.md),
-  [Coach C1 import / analyze / explain](docs/superpowers/plans/2026-09-02-coach-m1-analyze-explain.md)
+  [Coach C1 import / analyze / explain](docs/superpowers/plans/2026-09-02-coach-m1-analyze-explain.md),
+  [Coach C2 pattern detection](docs/superpowers/plans/2026-09-02-coach-m2-patterns.md)
