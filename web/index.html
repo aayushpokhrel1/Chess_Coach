@@ -8,6 +8,15 @@
   <body>
     <main id="app">
       <h1>Chess Coach</h1>
+      <div class="controls">
+        <select id="source">
+          <option value="lichess">Lichess</option>
+          <option value="chesscom">Chess.com</option>
+        </select>
+        <input id="fetchUser" placeholder="Username to import" />
+        <button id="fetchGames">Fetch games</button>
+        <span id="fetchStatus"></span>
+      </div>
       <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
       <div class="controls">
         <button id="load">Load</button>

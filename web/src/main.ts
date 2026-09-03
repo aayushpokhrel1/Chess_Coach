@@ -8,6 +8,7 @@ import { explain, CATEGORY_LABEL } from './explain';
 import { phaseOf } from './phase';
 import { summarize, type MoveRecord, type Report } from './report';
 import { legalDests, gradeAttempt, type Drill } from './drill';
+import { fetchLichess, fetchChessCom } from './import';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -222,6 +223,21 @@ function renderReport(r: Report, skipped: number) {
 }
 
 $('analyzeAll').addEventListener('click', analyzeAll);
+
+$('fetchGames').addEventListener('click', async () => {
+  const src = ($('source') as HTMLSelectElement).value;
+  const user = ($('fetchUser') as HTMLInputElement).value.trim();
+  if (!user) return;
+  $('fetchStatus').textContent = 'fetching...';
+  try {
+    const pgn = src === 'lichess' ? await fetchLichess(user, 10) : await fetchChessCom(user, 10);
+    ($('pgn') as HTMLTextAreaElement).value = pgn;
+    ($('username') as HTMLInputElement).value = user; // target this player in Analyze all
+    $('fetchStatus').textContent = pgn ? 'loaded, now click Analyze all games' : 'no games found';
+  } catch (e) {
+    $('fetchStatus').textContent = `import failed: ${(e as Error).message}`;
+  }
+});
 $('prev').addEventListener('click', () => {
   if (idx >= 0) {
     idx--;
