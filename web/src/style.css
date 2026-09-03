@@ -114,3 +114,14 @@ body {
 .report td {
   padding: 2px 12px 2px 0;
 }
+
+.drill {
+  margin-top: 1rem;
+  max-width: 480px;
+}
+.drill #drillPrompt {
+  font-weight: 600;
+}
+.drill #drillFeedback {
+  min-height: 1.4rem;
+}

@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js';
+import type { Key } from 'chessground/types';
 import { classify } from './classify';
 import type { MistakeCategory } from './explain';
 
@@ -14,13 +15,14 @@ export interface Drill {
 export type DrillGrade = 'solved' | 'inaccurate' | 'failed';
 
 // Legal destination squares grouped by origin, for chessground's movable.dests.
-export function legalDests(fen: string): Map<string, string[]> {
+export function legalDests(fen: string): Map<Key, Key[]> {
   const chess = new Chess(fen);
-  const dests = new Map<string, string[]>();
+  const dests = new Map<Key, Key[]>();
   for (const m of chess.moves({ verbose: true })) {
-    const arr = dests.get(m.from) ?? [];
-    arr.push(m.to);
-    dests.set(m.from, arr);
+    const from = m.from as Key;
+    const arr = dests.get(from) ?? [];
+    arr.push(m.to as Key);
+    dests.set(from, arr);
   }
   return dests;
 }

@@ -1,11 +1,13 @@
 import './style.css';
+import { Chess } from 'chess.js';
 import { setupBoard } from './board';
 import { parsePgn, splitPgnGames, parseGame, type GameMove } from './pgn';
 import { Engine } from './engine';
 import { scoreToCp, classify, type Quality } from './classify';
-import { explain } from './explain';
+import { explain, CATEGORY_LABEL } from './explain';
 import { phaseOf } from './phase';
 import { summarize, type MoveRecord, type Report } from './report';
+import { legalDests, gradeAttempt, type Drill } from './drill';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -25,6 +27,8 @@ interface MoveAnalysis {
 let moves: GameMove[] = [];
 let analyses: MoveAnalysis[] = [];
 let idx = -1; // -1 = start position, else index into moves (show fenAfter)
+let drills: Drill[] = [];
+let drillIdx = 0;
 
 const engine = new Engine();
 const DEPTH = 12;
@@ -59,7 +63,7 @@ function buildMoveList() {
 
 function render() {
   const fen = idx < 0 ? START : moves[idx].fenAfter;
-  board.set({ fen: fen.split(' ')[0] });
+  board.set({ fen: fen.split(' ')[0], viewOnly: true });
   $('ply').textContent = idx < 0 ? 'start' : `${idx + 1}. ${moves[idx].san}`;
 
   // Highlight the active move.
@@ -136,6 +140,7 @@ async function analyzeAll() {
   }
   const chunks = splitPgnGames(text);
   const records: MoveRecord[] = [];
+  drills = [];
   let counted = 0;
   let skipped = 0;
 
@@ -173,11 +178,29 @@ async function analyzeAll() {
         oppBest: after.bestMove,
       });
       records.push({ phase: phaseOf(m.ply, m.fenBefore), category, quality });
+      if (quality === 'mistake' || quality === 'blunder') {
+        drills.push({
+          fen: m.fenBefore,
+          evalBeforeCp: scoreToCp(before.score),
+          bestMove: before.bestMove,
+          color,
+          playedSan: m.san,
+          category,
+        });
+      }
     }
     $('reportStatus').textContent = `analyzed ${counted} game(s)...`;
   }
 
   renderReport(summarize(counted, records), skipped);
+
+  const startBtn = $('startDrills') as HTMLButtonElement;
+  if (drills.length) {
+    startBtn.textContent = `Start drills (${drills.length})`;
+    startBtn.hidden = false;
+  } else {
+    startBtn.hidden = true;
+  }
 }
 
 function renderReport(r: Report, skipped: number) {
@@ -209,5 +232,95 @@ $('next').addEventListener('click', () => {
   if (idx < moves.length - 1) {
     idx++;
     render();
+  }
+});
+
+// --- Drills from your own mistakes (C3) ---
+
+function setDrillBoard(d: Drill) {
+  const side = d.color === 'w' ? 'white' : 'black';
+  board.set({
+    fen: d.fen.split(' ')[0],
+    orientation: side,
+    turnColor: side,
+    viewOnly: false,
+    movable: {
+      free: false,
+      color: side,
+      dests: legalDests(d.fen),
+      events: { after: onUserMove },
+    },
+  });
+}
+
+function showDrill() {
+  const d = drills[drillIdx];
+  const side = d.color === 'w' ? 'white' : 'black';
+  setDrillBoard(d);
+  const label = CATEGORY_LABEL[d.category] || 'a mistake';
+  $('drillPrompt').textContent =
+    `You played ${d.playedSan} here (${label}). Find a better move for ${side}.`;
+  $('drillFeedback').textContent = '';
+  $('drillProgress').textContent = `${drillIdx + 1} / ${drills.length}`;
+}
+
+function bestSan(d: Drill): string {
+  try {
+    const c = new Chess(d.fen);
+    return c.move({
+      from: d.bestMove.slice(0, 2),
+      to: d.bestMove.slice(2, 4),
+      promotion: d.bestMove.slice(4) || undefined,
+    }).san;
+  } catch {
+    return d.bestMove;
+  }
+}
+
+async function onUserMove(orig: string, dest: string) {
+  const d = drills[drillIdx];
+  const chess = new Chess(d.fen);
+  const piece = chess.get(orig as never);
+  const promo =
+    piece && piece.type === 'p' && (dest[1] === '8' || dest[1] === '1') ? 'q' : undefined;
+  let fenAfter: string;
+  try {
+    chess.move({ from: orig, to: dest, promotion: promo });
+    fenAfter = chess.fen();
+  } catch {
+    setDrillBoard(d); // illegal drop: reset
+    return;
+  }
+  $('drillFeedback').textContent = 'thinking...';
+  const after = await engine.analyze(fenAfter, DEPTH);
+  const grade = gradeAttempt(d.evalBeforeCp, -scoreToCp(after.score));
+  if (grade === 'solved') {
+    $('drillFeedback').textContent = 'Solved. That move holds up.';
+  } else if (grade === 'inaccurate') {
+    $('drillFeedback').textContent =
+      'Better, but still a little loose. Try again or see the answer.';
+  } else {
+    $('drillFeedback').textContent = `That still loses material. The engine likes ${bestSan(d)}.`;
+  }
+  setDrillBoard(d); // reset so the puzzle position stays the question
+}
+
+function startDrills() {
+  if (!drills.length) return;
+  drillIdx = 0;
+  ($('drill') as HTMLElement).hidden = false;
+  showDrill();
+}
+
+$('startDrills').addEventListener('click', startDrills);
+$('drillAnswer').addEventListener('click', () => {
+  $('drillFeedback').textContent = `Engine's best: ${bestSan(drills[drillIdx])}.`;
+});
+$('drillNext').addEventListener('click', () => {
+  if (drillIdx < drills.length - 1) {
+    drillIdx++;
+    showDrill();
+  } else {
+    $('drillFeedback').textContent = 'That was the last drill. Nice work.';
   }
 });

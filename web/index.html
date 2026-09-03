@@ -17,9 +17,19 @@
       <div class="controls">
         <input id="username" placeholder="Your username (as in the PGN)" />
         <button id="analyzeAll">Analyze all games</button>
+        <button id="startDrills" hidden>Start drills</button>
         <span id="reportStatus"></span>
       </div>
       <div id="report" class="report"></div>
+      <div id="drill" class="drill" hidden>
+        <p id="drillPrompt"></p>
+        <p id="drillFeedback"></p>
+        <div class="controls">
+          <button id="drillAnswer">Show answer</button>
+          <button id="drillNext">Next</button>
+          <span id="drillProgress"></span>
+        </div>
+      </div>
       <div class="layout">
         <div>
           <div id="board" class="board"></div>
