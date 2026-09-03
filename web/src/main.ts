@@ -9,6 +9,7 @@ import { phaseOf } from './phase';
 import { summarize, type MoveRecord, type Report } from './report';
 import { legalDests, gradeAttempt, type Drill } from './drill';
 import { fetchLichess, fetchChessCom } from './import';
+import { barPercent } from './evalBar';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -23,6 +24,7 @@ interface MoveAnalysis {
   oppBest: string; // best reply at fenAfter (uci)
   pvBefore: string[];
   explanation: string;
+  whiteEvalCp: number; // eval of the position after this move, White's perspective
 }
 
 let moves: GameMove[] = [];
@@ -75,6 +77,10 @@ function render() {
   // Explanation panel.
   const a = idx >= 0 ? analyses[idx] : undefined;
   $('explain').textContent = a?.explanation ?? '';
+
+  // Eval bar (White fills from the bottom).
+  const white = a ? barPercent(a.whiteEvalCp) : 50;
+  ($('evalfill') as HTMLElement).style.height = `${white}%`;
 }
 
 async function analyzeGame() {
@@ -85,6 +91,7 @@ async function analyzeGame() {
     const evalBeforeCp = scoreToCp(before.score);
     const evalAfterMoverCp = -scoreToCp(after.score); // after: opponent to move, negate
     const { cpLoss, quality } = classify(evalBeforeCp, evalAfterMoverCp);
+    const whiteEvalCp = moves[i].mover === 'w' ? evalAfterMoverCp : -evalAfterMoverCp;
     const ex = explain({
       fenBefore: moves[i].fenBefore,
       playedUci: moves[i].from + moves[i].to,
@@ -104,6 +111,7 @@ async function analyzeGame() {
       oppBest: after.bestMove,
       pvBefore: before.pv,
       explanation: ex.text,
+      whiteEvalCp,
     });
     $('status').textContent = `analyzing ${i + 1}/${moves.length}`;
   }
