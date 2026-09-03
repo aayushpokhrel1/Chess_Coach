@@ -328,12 +328,27 @@ function bestSan(d: Drill): string {
   }
 }
 
+function pickPromotion(): Promise<'q' | 'r' | 'b' | 'n'> {
+  const box = $('promo') as HTMLElement;
+  box.hidden = false;
+  return new Promise((resolve) => {
+    const onClick = (e: Event) => {
+      const p = (e.target as HTMLElement).getAttribute('data-p');
+      if (!p) return;
+      box.hidden = true;
+      box.querySelectorAll('button').forEach((b) => b.removeEventListener('click', onClick));
+      resolve(p as 'q' | 'r' | 'b' | 'n');
+    };
+    box.querySelectorAll('button').forEach((b) => b.addEventListener('click', onClick));
+  });
+}
+
 async function onUserMove(orig: string, dest: string) {
   const d = drills[drillIdx];
   const chess = new Chess(d.fen);
   const piece = chess.get(orig as never);
-  const promo =
-    piece && piece.type === 'p' && (dest[1] === '8' || dest[1] === '1') ? 'q' : undefined;
+  const isPromo = piece && piece.type === 'p' && (dest[1] === '8' || dest[1] === '1');
+  const promo = isPromo ? await pickPromotion() : undefined;
   let fenAfter: string;
   try {
     chess.move({ from: orig, to: dest, promotion: promo });

@@ -148,3 +148,10 @@ body {
 .drill #drillFeedback {
   min-height: 1.4rem;
 }
+.promo {
+  margin: 0.5rem 0;
+}
+.promo button {
+  margin-right: 4px;
+  font-weight: 600;
+}
