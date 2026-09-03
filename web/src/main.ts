@@ -1,9 +1,11 @@
 import './style.css';
 import { setupBoard } from './board';
-import { parsePgn, type GameMove } from './pgn';
+import { parsePgn, splitPgnGames, parseGame, type GameMove } from './pgn';
 import { Engine } from './engine';
 import { scoreToCp, classify, type Quality } from './classify';
 import { explain } from './explain';
+import { phaseOf } from './phase';
+import { summarize, type MoveRecord, type Report } from './report';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -122,6 +124,81 @@ $('load').addEventListener('click', () => {
 $('analyze').addEventListener('click', () => {
   if (moves.length) analyzeGame();
 });
+
+// --- Multi-game pattern report (C2) ---
+
+async function analyzeAll() {
+  const text = ($('pgn') as HTMLTextAreaElement).value;
+  const user = ($('username') as HTMLInputElement).value.trim().toLowerCase();
+  if (!user) {
+    alert('Enter your username first (it must match the PGN White/Black tag).');
+    return;
+  }
+  const chunks = splitPgnGames(text);
+  const records: MoveRecord[] = [];
+  let counted = 0;
+  let skipped = 0;
+
+  for (let g = 0; g < chunks.length; g++) {
+    let game;
+    try {
+      game = parseGame(chunks[g]);
+    } catch {
+      skipped++;
+      continue;
+    }
+    const color: 'w' | 'b' | null =
+      game.white.toLowerCase() === user
+        ? 'w'
+        : game.black.toLowerCase() === user
+          ? 'b'
+          : null;
+    if (!color) {
+      skipped++;
+      continue;
+    }
+    counted++;
+    for (const m of game.moves) {
+      if (m.mover !== color) continue; // only the user's moves
+      const before = await engine.analyze(m.fenBefore, DEPTH);
+      const after = await engine.analyze(m.fenAfter, DEPTH);
+      const { quality } = classify(scoreToCp(before.score), -scoreToCp(after.score));
+      const { category } = explain({
+        fenBefore: m.fenBefore,
+        playedUci: m.from + m.to,
+        quality,
+        bestMove: before.bestMove,
+        bestIsMate: before.score.mate !== undefined,
+        fenAfter: m.fenAfter,
+        oppBest: after.bestMove,
+      });
+      records.push({ phase: phaseOf(m.ply, m.fenBefore), category, quality });
+    }
+    $('reportStatus').textContent = `analyzed ${counted} game(s)...`;
+  }
+
+  renderReport(summarize(counted, records), skipped);
+}
+
+function renderReport(r: Report, skipped: number) {
+  const phaseRows = (['opening', 'middlegame', 'endgame'] as const)
+    .map((p) => `<tr><td>${p}</td><td>${r.byPhase[p]}</td></tr>`)
+    .join('');
+  const catRows = (['dropped-material', 'missed-mate', 'missed-capture', 'other'] as const)
+    .map((c) => `<tr><td>${c}</td><td>${r.byCategory[c]}</td></tr>`)
+    .join('');
+  $('report').innerHTML =
+    `<p class="headline">${r.headline}</p>` +
+    `<p>${r.games} game(s), ${r.userMoves} of your moves, ` +
+    `${r.mistakes} mistakes (${r.blunders} blunders)` +
+    (skipped ? `, ${skipped} game(s) skipped (name not found / unparsable)` : '') +
+    `</p>` +
+    `<div class="tables"><table><caption>By phase</caption>${phaseRows}</table>` +
+    `<table><caption>By category</caption>${catRows}</table></div>`;
+  $('reportStatus').textContent = 'done';
+}
+
+$('analyzeAll').addEventListener('click', analyzeAll);
 $('prev').addEventListener('click', () => {
   if (idx >= 0) {
     idx--;

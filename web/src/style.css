@@ -90,3 +90,27 @@ body {
 .q-blunder {
   color: #b00;
 }
+
+.report {
+  margin-top: 1rem;
+  max-width: 640px;
+}
+.report .headline {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.report .tables {
+  display: flex;
+  gap: 2rem;
+}
+.report table {
+  border-collapse: collapse;
+}
+.report caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.report td {
+  padding: 2px 12px 2px 0;
+}
