@@ -78,7 +78,7 @@ async function analyzeGame() {
     const evalBeforeCp = scoreToCp(before.score);
     const evalAfterMoverCp = -scoreToCp(after.score); // after: opponent to move, negate
     const { cpLoss, quality } = classify(evalBeforeCp, evalAfterMoverCp);
-    const explanation = explain({
+    const ex = explain({
       fenBefore: moves[i].fenBefore,
       playedUci: moves[i].from + moves[i].to,
       quality,
@@ -96,7 +96,7 @@ async function analyzeGame() {
       bestIsMate: before.score.mate !== undefined,
       oppBest: after.bestMove,
       pvBefore: before.pv,
-      explanation,
+      explanation: ex.text,
     });
     $('status').textContent = `analyzing ${i + 1}/${moves.length}`;
   }
