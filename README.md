@@ -61,6 +61,8 @@ Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI sea
   (hanging a piece / missing a mate / missing a capture / other), with a headline insight.
 - [x] **C3. Drills** — replay your own mistake and blunder positions as puzzles on a
   movable board; your move is graded live by Stockfish (any non-losing move solves it).
+- [x] **C4. Polish** — import games by username from Lichess and Chess.com, an eval bar
+  beside the board, remembered sessions (localStorage), and under-promotion in drills.
 
 ## Build
 
@@ -97,6 +99,16 @@ npm test         # unit tests (Vitest)
 Analysis runs fully in the browser (Stockfish single-threaded WASM in a Web Worker), so the
 site hosts as static files with no backend.
 
+Play our engine against Stockfish (needs `engine/build/chess_engine.exe` built first):
+
+```bash
+cd web
+node scripts/match.mjs --skill 2     # handicapped Stockfish (watchable)
+node scripts/match.mjs --skill 20    # full-strength Stockfish
+```
+
+The referee uses chess.js as the arbiter and prints the moves, result, and PGN.
+
 ## Layout
 
 ```
@@ -116,4 +128,5 @@ docs/     # design spec and per-milestone implementation plans
   [M6 UCI interface](docs/superpowers/plans/2026-09-02-engine-m6-uci.md),
   [Coach C1 import / analyze / explain](docs/superpowers/plans/2026-09-02-coach-m1-analyze-explain.md),
   [Coach C2 pattern detection](docs/superpowers/plans/2026-09-02-coach-m2-patterns.md),
-  [Coach C3 drills](docs/superpowers/plans/2026-09-02-coach-m3-drills.md)
+  [Coach C3 drills](docs/superpowers/plans/2026-09-02-coach-m3-drills.md),
+  [Coach C4 polish](docs/superpowers/plans/2026-09-02-coach-m4-polish.md)
