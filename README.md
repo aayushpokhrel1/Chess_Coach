@@ -50,7 +50,14 @@ Engine milestones (correctness before speed):
 - [ ] **M7. WASM + optimization** (later) — bitboards, transposition table, move
   ordering; run in the browser.
 
-Coach track (web) runs in parallel on Stockfish, then adopts the engine over the UCI seam.
+Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
+
+- [x] **C1. Import, analyze, explain** — paste a PGN, step through it on a board, analyze
+  every move with Stockfish (in a Web Worker), classify each by eval swing
+  (best / good / inaccuracy / mistake / blunder), and explain the mistakes in beginner
+  language derived from the engine's own line.
+- [ ] **C2. Pattern detection** (later) — recurring mistakes across many games.
+- [ ] **C3. Drills** (later) — replay your own blunder positions as puzzles.
 
 ## Build
 
@@ -75,11 +82,23 @@ position startpos moves e2e4
 go movetime 1000
 ```
 
+### Coach (web)
+
+```bash
+cd web
+npm install
+npm run dev      # Vite dev server; paste a PGN, Load, then Analyze
+npm test         # unit tests (Vitest)
+```
+
+Analysis runs fully in the browser (Stockfish single-threaded WASM in a Web Worker), so the
+site hosts as static files with no backend.
+
 ## Layout
 
 ```
 engine/   # C++ engine (CMake project: src/, tests/, third_party/doctest.h)
-web/      # coach frontend (added when the web track starts)
+web/      # coach frontend (Vite + TS: src/, public/stockfish/ vendored engine)
 docs/     # design spec and per-milestone implementation plans
 ```
 
@@ -91,4 +110,5 @@ docs/     # design spec and per-milestone implementation plans
   [M3 make / unmake](docs/superpowers/plans/2026-09-01-engine-m3-make-unmake.md),
   [M4 evaluation v1](docs/superpowers/plans/2026-09-01-engine-m4-evaluation.md),
   [M5 search](docs/superpowers/plans/2026-09-01-engine-m5-search.md),
-  [M6 UCI interface](docs/superpowers/plans/2026-09-02-engine-m6-uci.md)
+  [M6 UCI interface](docs/superpowers/plans/2026-09-02-engine-m6-uci.md),
+  [Coach C1 import / analyze / explain](docs/superpowers/plans/2026-09-02-coach-m1-analyze-explain.md)
