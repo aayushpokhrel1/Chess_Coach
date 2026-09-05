@@ -55,9 +55,10 @@ Engine milestones (correctness before speed):
   search (with check evasions) that fixes the horizon-effect blunders; the engine now
   beats a handicapped Stockfish it used to lose to. The search also returns a principal
   variation and emits a full UCI `info` line.
-- [ ] **M7b. WebAssembly + play** — compile the engine to WASM (Emscripten) and add a
-  "play a game against your engine" mode in the coach. (Phase 1, the UCI `info` line, is
-  done; Phase 2 needs the Emscripten toolchain installed.)
+- [x] **M7b. WebAssembly + play**: the engine compiles to WASM (Emscripten) and runs in the
+  browser in a Web Worker, powering a "play a game against your engine" mode in the coach.
+  Stockfish stays the analysis engine (ours is too slow for depth-12); ours is the opponent
+  you play. Phase 1 (the UCI `info` line and principal variation) also landed here.
 - [ ] **M7c. Optimization** (later) — transposition table, bitboards, deeper search.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
@@ -107,9 +108,14 @@ npm test         # unit tests (Vitest)
 ```
 
 Analysis runs fully in the browser (Stockfish single-threaded WASM in a Web Worker), so the
-site hosts as static files with no backend.
+site hosts as static files with no backend. The "Play the engine" section runs OUR engine,
+compiled to WASM, in its own Web Worker: pick a color, New game, and play it (fixed think time).
 
-Play our engine against Stockfish (needs `engine/build/chess_engine.exe` built first):
+To rebuild the WASM engine (needs Emscripten; the built `web/public/engine/chesscoach.{js,wasm}`
+is committed so this is only needed after engine changes), from the repo root with the emsdk env
+sourced: `emcmake cmake -S engine -B engine/build-wasm -G Ninja && cmake --build engine/build-wasm`.
+
+Play our engine against Stockfish headlessly (needs `engine/build/chess_engine.exe` built first):
 
 ```bash
 cd web
