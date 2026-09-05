@@ -16,10 +16,14 @@ next begins.
 
 Today the engine represents any position and round-trips it through FEN, generates all
 legal moves (correctness proven by `perft`, leaf-node counts matching published reference
-numbers), evaluates positions (material plus piece-square tables), searches with negamax,
-alpha-beta pruning, and iterative deepening, and **plays a full game over UCI under real
-time controls**. The coaching side can now drive our own engine at the same UCI socket it
-uses for **Stockfish**, and the two can analyze the same position side by side.
+numbers), evaluates positions (material plus piece-square tables), and searches with
+negamax, alpha-beta pruning (captures ordered most-valuable-victim first), iterative
+deepening, and **quiescence search** so it stops banking material it is about to lose to a
+recapture. It **plays a full game over UCI under real time controls** and reports a full
+`info` line (score, nodes, principal variation). The coaching side runs on **Stockfish**
+for accurate analysis; the next step compiles our engine to WebAssembly so you can play a
+game against it in the browser (our engine is not fast enough to replace Stockfish for deep
+analysis, so Stockfish stays the analyst and our engine becomes the sparring opponent).
 
 ## Two tracks, one seam
 
@@ -47,8 +51,14 @@ Engine milestones (correctness before speed):
   hanging a queen, finds mate in one, then mate in two.
 - [x] **M6. UCI interface** — `chess_engine` executable speaks UCI (`position`, `go`,
   `bestmove`) with real time management; plays a full game in a GUI.
-- [ ] **M7. WASM + optimization** (later) — bitboards, transposition table, move
-  ordering; run in the browser.
+- [x] **M7a. Quiescence + move ordering** — MVV-LVA capture ordering and a quiescence
+  search (with check evasions) that fixes the horizon-effect blunders; the engine now
+  beats a handicapped Stockfish it used to lose to. The search also returns a principal
+  variation and emits a full UCI `info` line.
+- [ ] **M7b. WebAssembly + play** — compile the engine to WASM (Emscripten) and add a
+  "play a game against your engine" mode in the coach. (Phase 1, the UCI `info` line, is
+  done; Phase 2 needs the Emscripten toolchain installed.)
+- [ ] **M7c. Optimization** (later) — transposition table, bitboards, deeper search.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
@@ -129,4 +139,6 @@ docs/     # design spec and per-milestone implementation plans
   [Coach C1 import / analyze / explain](docs/superpowers/plans/2026-09-02-coach-m1-analyze-explain.md),
   [Coach C2 pattern detection](docs/superpowers/plans/2026-09-02-coach-m2-patterns.md),
   [Coach C3 drills](docs/superpowers/plans/2026-09-02-coach-m3-drills.md),
-  [Coach C4 polish](docs/superpowers/plans/2026-09-02-coach-m4-polish.md)
+  [Coach C4 polish](docs/superpowers/plans/2026-09-02-coach-m4-polish.md),
+  [M7a quiescence](docs/superpowers/plans/2026-09-05-engine-m7a-quiescence.md),
+  [M7b WASM + play](docs/superpowers/plans/2026-09-05-engine-m7b-wasm.md)
