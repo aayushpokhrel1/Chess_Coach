@@ -44,6 +44,15 @@ TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer n
     CHECK(pruned_nodes < full_nodes);   // but it must visit fewer nodes
 }
 
+TEST_CASE("search returns a principal variation starting with the best move") {
+    Board b = board_from_fen("4k3/8/8/8/8/3q4/8/3RK3 w - - 0 1"); // Rd1xd3 wins the queen
+    SearchResult r = search(b, 3);
+    REQUIRE(r.pv.size() >= 1);
+    CHECK(r.pv[0].from == r.best.from);
+    CHECK(r.pv[0].to   == r.best.to);
+    CHECK(r.depth == 3);
+}
+
 TEST_CASE("iterative deepening matches a single fixed-depth search") {
     Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
     SearchResult id    = search(b, 3);

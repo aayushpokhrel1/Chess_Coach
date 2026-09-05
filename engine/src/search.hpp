@@ -1,10 +1,13 @@
 #pragma once
+#include <vector>
 #include "board.hpp"
 #include "move.hpp"
 
 struct SearchResult {
-    Move best;   // best move found (best.from == NO_SQUARE if no legal move exists)
-    int score;   // centipawns, from the side-to-move perspective
+    Move best;               // best move found (best.from == NO_SQUARE if no legal move exists)
+    int score;               // centipawns, from the side-to-move perspective
+    std::vector<Move> pv;    // principal variation (main line), pv[0] == best
+    int depth = 0;           // last fully completed search depth
 };
 
 SearchResult search(Board& b, int depth);  // fixed-depth negamax

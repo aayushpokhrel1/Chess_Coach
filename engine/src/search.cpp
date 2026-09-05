@@ -19,6 +19,12 @@ bool g_stop = false;          // set true once the deadline has passed
 long g_check_counter = 0;     // node counter for periodic clock checks
 Clock::time_point g_deadline;
 
+// Triangular PV table: g_pv[ply] holds the best line found from that ply,
+// g_pv_len[ply] its length. Filled bottom-up as negamax returns.
+const int MAXPLY = 128;
+Move g_pv[MAXPLY][MAXPLY];
+int  g_pv_len[MAXPLY];
+
 // Every 2048 nodes, glance at the wall clock and set g_stop if time is up.
 inline void maybe_timeout() {
     if (!g_timed || !g_can_stop) return;
@@ -109,6 +115,8 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
     if (g_stop) return 0;   // aborted: this value is discarded upstream
     g_nodes++;
 
+    if (ply < MAXPLY) g_pv_len[ply] = 0;
+
     std::vector<Move> moves = generate_legal(b);
     if (moves.empty())
         return in_check(b, b.side_to_move) ? -(MATE - ply) : 0;
@@ -122,8 +130,19 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
         int score = -negamax(b, depth - 1, ply + 1, -beta, -alpha);
         unmake_move(b, m, u);
         if (g_stop) return best;    // bail out fast; result discarded upstream
-        if (score > best) best = score;
-        if (best > alpha) alpha = best;
+        if (score > best) {
+            best = score;
+            if (score > alpha) {    // a PV move: record it and splice the child's line
+                alpha = score;
+                if (ply + 1 < MAXPLY) {
+                    g_pv[ply][0] = m;
+                    int n = g_pv_len[ply + 1];
+                    for (int i = 0; i < n && i + 1 < MAXPLY; i++)
+                        g_pv[ply][i + 1] = g_pv[ply + 1][i];
+                    g_pv_len[ply] = n + 1;
+                }
+            }
+        }
         if (alpha >= beta) break;   // beta cutoff: opponent would never allow this node
     }
     return best;
@@ -189,10 +208,15 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
         if (score > best) {
             best = score;
             result.best = m;
+            result.pv.clear();          // this root move plus the line below it
+            result.pv.push_back(m);
+            for (int i = 0; i < g_pv_len[1] && i < MAXPLY; i++)
+                result.pv.push_back(g_pv[1][i]);
         }
         if (best > alpha) alpha = best;
     }
     result.score = best;
+    result.depth = depth;
     return result;
 }
 
