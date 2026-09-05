@@ -51,6 +51,58 @@ void order_moves(const Board& b, std::vector<Move>& moves) {
     });
 }
 
+// Leaf of the main search. Instead of trusting a static eval in the middle of a
+// capture fight, keep resolving captures until the position is quiet, so the score
+// reflects the material that actually stays on the board.
+//
+// ponytail: qdepth cap (QMAX) truncates runaway check sequences (e.g. perpetual
+// check) by falling back to the static eval; raise QMAX or add repetition detection
+// if a real analysis position is ever cut short.
+const int QMAX = 40;
+
+int quiesce(Board& b, int ply, int alpha, int beta, int qdepth = 0) {
+    maybe_timeout();
+    if (g_stop) return 0;   // aborted: value discarded upstream
+    g_nodes++;
+
+    if (qdepth >= QMAX) return evaluate(b);   // depth guard, see ponytail note
+    bool check = in_check(b, b.side_to_move);
+
+    std::vector<Move> moves;
+    int best;
+
+    if (check) {
+        // In check there is no "do nothing" option: search every legal escape,
+        // not just captures, or we could miss the only move that survives.
+        moves = generate_legal(b);
+        if (moves.empty()) return -(MATE - ply);   // checkmate at the leaf
+        best = -INF;
+    } else {
+        // Stand pat: you are never forced to capture, so the static eval is a floor.
+        int stand = evaluate(b);
+        if (stand >= beta) return stand;
+        best = stand;
+        if (stand > alpha) alpha = stand;
+        moves = generate_legal(b);
+        std::vector<Move> caps;
+        for (const Move& m : moves)
+            if (is_capture(b, m)) caps.push_back(m);
+        moves.swap(caps);
+    }
+
+    order_moves(b, moves);   // MVV-LVA
+    for (const Move& m : moves) {
+        Undo u = make_move(b, m);
+        int score = -quiesce(b, ply + 1, -beta, -alpha, qdepth + 1);
+        unmake_move(b, m, u);
+        if (g_stop) return best;
+        if (score > best) best = score;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;   // beta cutoff
+    }
+    return best;
+}
+
 // Alpha-beta negamax. Same value as plain negamax, fewer nodes.
 int negamax(Board& b, int depth, int ply, int alpha, int beta) {
     maybe_timeout();
@@ -61,7 +113,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
     if (moves.empty())
         return in_check(b, b.side_to_move) ? -(MATE - ply) : 0;
     if (depth == 0)
-        return evaluate(b);
+        return quiesce(b, ply, alpha, beta);
 
     order_moves(b, moves);
     int best = -INF;
@@ -84,7 +136,7 @@ int negamax_full(Board& b, int depth, int ply) {
     if (moves.empty())
         return in_check(b, b.side_to_move) ? -(MATE - ply) : 0;
     if (depth == 0)
-        return evaluate(b);
+        return quiesce(b, ply, -INF, INF);   // same leaf as negamax, full window keeps it exact
 
     int best = -INF;
     for (const Move& m : moves) {

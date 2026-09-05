@@ -55,9 +55,22 @@ TEST_CASE("iterative deepening matches a single fixed-depth search") {
 
 TEST_CASE("search finds mate in two") {
     // Doubled rooks on the e-file: 1.Re8+ Rxe8 2.Rxe8# (f7/g7/h7 seal the back rank).
+    // This mate is all checks and captures, so quiescence resolves it even at shallow
+    // nominal depth; the search must report a forced-mate score.
     Board b = board_from_fen("r5k1/5ppp/8/8/8/8/4RPPP/4R1K1 w - - 0 1");
-    CHECK(search(b, 2).score < 29000);   // too shallow to see the mate
-    CHECK(search(b, 4).score > 29000);   // deep enough: forced mate found
+    CHECK(search(b, 4).score > 29000);   // forced mate found
+}
+
+TEST_CASE("quiescence declines a poisoned capture") {
+    // Philidor: after 1.e4 e5 2.Nf3 d6, White to move. Material is equal. Nf3xe5 wins
+    // the e5 pawn on the surface (static eval right after it reads about +160 for White),
+    // but d6xe5 wins the knight straight back (the true value is about -200). A depth-1
+    // search without quiescence would grab Nxe5 and think it is up material; with
+    // quiescence the recapture is seen, so White declines it and stays near equal.
+    Board b = board_from_fen("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3");
+    SearchResult r = search(b, 1);
+    CHECK(r.score < 90);                 // the pawn "win" is seen to cost the knight
+    CHECK(to_uci(r.best) != "f3e5");     // so Nxe5 is not chosen
 }
 
 TEST_CASE("timed search returns a legal move under a tiny budget") {
