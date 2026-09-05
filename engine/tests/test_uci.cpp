@@ -57,12 +57,32 @@ TEST_CASE("budget_for_clock splits the clock sanely") {
     CHECK(budget_for_clock(20, 0) >= 1);           // tiny clock still yields >= 1ms
 }
 
+TEST_CASE("go emits an info line with score and pv, then bestmove") {
+    UciState s;
+    handle_command(s, "position startpos");
+    std::string r = handle_command(s, "go depth 3");
+    CHECK(r.find("info ")     != std::string::npos);
+    CHECK(r.find("score cp")  != std::string::npos);
+    CHECK(r.find(" pv ")      != std::string::npos);
+    CHECK(r.find("bestmove ") != std::string::npos);
+}
+
+TEST_CASE("go reports a mate score as score mate") {
+    UciState s;
+    // White: Rh1, Rg7 seals rank 7; Rh1-h8 is mate in one.
+    handle_command(s, "position fen k7/6R1/8/8/8/8/8/K6R w - - 0 1");
+    std::string r = handle_command(s, "go depth 2");
+    CHECK(r.find("score mate") != std::string::npos);
+}
+
 TEST_CASE("go depth returns a legal bestmove") {
     UciState s;
     handle_command(s, "position startpos");
     std::string r = handle_command(s, "go depth 2");
-    REQUIRE(r.rfind("bestmove ", 0) == 0);
-    std::string mv = r.substr(9);
+    size_t bm = r.find("bestmove ");
+    REQUIRE(bm != std::string::npos);
+    std::string mv = r.substr(bm + 9);
+    mv = mv.substr(0, mv.find_first_of(" \n"));   // first token after "bestmove "
     Move m = move_from_uci(s.board, mv);
     CHECK(m.from != NO_SQUARE);   // the printed move is legal
 }
@@ -71,5 +91,5 @@ TEST_CASE("go movetime returns a bestmove quickly") {
     UciState s;
     handle_command(s, "position startpos");
     std::string r = handle_command(s, "go movetime 50");
-    CHECK(r.rfind("bestmove ", 0) == 0);
+    CHECK(r.find("bestmove ") != std::string::npos);
 }

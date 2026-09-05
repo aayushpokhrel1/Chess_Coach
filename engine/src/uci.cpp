@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <chrono>
 
 Move move_from_uci(Board& b, const std::string& uci) {
     if (uci.size() < 4) return Move{};
@@ -89,11 +90,35 @@ SearchLimits compute_limits(const Board& b, const std::vector<std::string>& tok)
     return lim;
 }
 
+// UCI score field for a side-to-move centipawn score. Our search encodes a mate
+// as +-(MATE - plies_to_mate); convert that back to "mate N" counted in moves.
+std::string format_score(int score) {
+    const int MATE = 30000, THRESH = MATE - 1000;
+    if (score > THRESH)  return "mate " + std::to_string((MATE - score + 1) / 2);
+    if (score < -THRESH) return "mate " + std::to_string(-((MATE + score + 1) / 2));
+    return "cp " + std::to_string(score);
+}
+
 std::string handle_go(UciState& state, const std::vector<std::string>& tok) {
+    using Clock = std::chrono::steady_clock;
     SearchLimits lim = compute_limits(state.board, tok);
+    auto t0 = Clock::now();
     SearchResult r = search_timed(state.board, lim);
+    long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - t0).count();
     if (r.best.from == NO_SQUARE) return "bestmove 0000";   // no legal move
-    return "bestmove " + to_uci(r.best);
+
+    long nodes = nodes_searched();
+    long long nps = ms > 0 ? (long long)nodes * 1000 / ms : 0;
+    std::string pv;
+    for (const Move& m : r.pv) { if (!pv.empty()) pv += " "; pv += to_uci(m); }
+
+    std::string info = "info depth " + std::to_string(r.depth)
+        + " score " + format_score(r.score)
+        + " nodes " + std::to_string(nodes)
+        + " nps " + std::to_string(nps)
+        + " time " + std::to_string(ms)
+        + " pv " + pv;
+    return info + "\nbestmove " + to_uci(r.best);
 }
 } // namespace
 
