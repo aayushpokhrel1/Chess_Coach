@@ -369,49 +369,45 @@ self.onmessage = (e) => {
 
 - [ ] **Step 2: Manual check deferred to Task 5 (worker only runs wired into the app).**
 
-### Task 5: Point the coach at our engine and verify in-browser
+### Task 5: "Play our engine" feature in the coach
+
+Decision (2026-09-05): our engine is too slow/weak to replace Stockfish for depth-12
+analysis (depth 6 startpos ~24s native, WASM ~2x slower). So Stockfish stays the analysis
+engine, and our WASM engine powers a new "play a game against your engine" feature at a
+fixed short think time. This is the honest use of the UCI seam and needs no depth-12 speed.
 
 **Files:**
-- Modify: `web/src/engine.ts` (ENGINE_URL + `{ type: 'module' }` worker; optional source toggle)
+- Create: `web/src/play.ts` (a thin driver: our-engine Worker + a movable chessground board + chess.js arbiter)
+- Modify: `web/src/main.ts` (a "Play the engine" tab/section entry point), `web/src/style.css` as needed
+- Reuse: the existing chessground setup patterns from the drill board; the Worker contract from engine.ts (but a separate Worker instance for our engine, ES module: `new Worker('/engine/chesscoach-worker.js', { type: 'module' })`).
 
 **Interfaces:**
-- Produces: the coach analyzes with our engine. Because an ES module worker is required, `new Worker(url, { type: 'module' })`.
+- Our engine is driven with `position startpos moves <...>` then `go movetime 500`, reading `bestmove`. (Same message contract the referee match.mjs already proves works against chess_engine.exe.)
 
-- [ ] **Step 1: Switch the engine source**
+Notes for the implementer (finalize against main.ts's current UI when unblocked):
+- Keep it separate from the analysis flow; do not touch engine.ts's Stockfish path.
+- Human picks a color; on the engine's turn, post the move list, wait for `bestmove`, apply it via chess.js, update the board. Detect game end via chess.js.
+- A fixed `movetime` (400 to 800 ms) keeps our engine responsive; no depth needed.
 
-In web/src/engine.ts:
-```ts
-const ENGINE_URL = '/engine/chesscoach-worker.js';
-// ...
-this.worker = new Worker(ENGINE_URL, { type: 'module' });
-```
-(Keep the Stockfish URL in a comment so it is a one-line revert if our engine underperforms.)
+- [ ] **Step 1: Build a minimal play loop** (human vs engine, one color), verified in the browser: legal game start to finish against our WASM engine.
 
-- [ ] **Step 2: Run the web tests and type-check**
+- [ ] **Step 2: Type-check and run web tests**
 
-Run (from web/):
-```bash
-npm run test
-npx tsc --noEmit
-```
-Expected: green (engine.ts change is URL + worker option only; pure modules unaffected).
+Run (from web/): `npx tsc --noEmit && npm run test`. Expected: green (new code is additive; analysis path untouched).
 
-- [ ] **Step 3: Verify in the browser**
-
-Start the dev server, load a short PGN, run analysis. Expected: moves get scores and classifications (best/good/inaccuracy/mistake/blunder) driven by our engine; a known blunder (e.g. the scholar's-mate game) is flagged. Confirm the eval bar moves and drills still grade.
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add web/public/engine/chesscoach-worker.js web/src/engine.ts
-git commit -m "feat(coach): run our WASM engine in the analysis worker (M7b)"
+git add web/src/play.ts web/src/main.ts web/src/style.css web/public/engine/chesscoach-worker.js
+git commit -m "feat(coach): play a game against our WASM engine"
 ```
 
 ---
 
 ## Self-Review
 
-- **Spec coverage:** info line with score (Task 2) is the coach's hard requirement; PV + depth (Task 1) feed it; WASM entry (Task 3), worker glue (Task 4), coach switch (Task 5). Fuller UCI = rich info fields (score cp/mate, nodes, nps, time, pv); multipv + per-depth streaming deferred as unused (noted in Global Constraints). All covered.
+- **Spec coverage:** info line with score (Task 2) is the coach's hard requirement; PV + depth (Task 1) feed it; WASM entry (Task 3), worker glue (Task 4), "play the engine" feature (Task 5, reframed 2026-09-05 after the perf finding). Fuller UCI = rich info fields (score cp/mate, nodes, nps, time, pv); multipv + per-depth streaming deferred as unused (noted in Global Constraints). All covered.
+- **Status (2026-09-05):** Phase 1 (Tasks 1-2) COMPLETE and committed. Phase 2 (Tasks 3-5) BLOCKED on the Emscripten install.
 - **Placeholder scan:** none; Phase 2 commands are concrete and validated once emsdk is installed.
 - **Type consistency:** `SearchResult.pv`/`.depth` defined in Task 1 and consumed in Task 2; `uci_command` defined in Task 3 and consumed in Task 4; `ENGINE_URL`/worker options in Task 5 match engine.ts.
 - **Blocker:** Phase 2 requires Emscripten (`emcc` absent as of 2026-09-05). Phase 1 is fully unblocked.
