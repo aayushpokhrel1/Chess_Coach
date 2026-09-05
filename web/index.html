@@ -63,6 +63,18 @@
           <ol id="moves" class="moves"></ol>
         </div>
       </div>
+      <section id="play" class="play">
+        <h2>Play the engine</h2>
+        <div class="controls">
+          <select id="playColor">
+            <option value="white">Play as White</option>
+            <option value="black">Play as Black</option>
+          </select>
+          <button id="newGame">New game</button>
+          <span id="playStatus"></span>
+        </div>
+        <div id="playBoard" class="board"></div>
+      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

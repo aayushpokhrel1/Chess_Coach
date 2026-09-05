@@ -10,6 +10,7 @@ import { summarize, type MoveRecord, type Report } from './report';
 import { legalDests, gradeAttempt, type Drill } from './drill';
 import { fetchLichess, fetchChessCom } from './import';
 import { barPercent } from './evalBar';
+import { initPlay } from './play';
 
 const boardEl = document.getElementById('board')!;
 const board = setupBoard(boardEl);
@@ -390,3 +391,6 @@ $('drillNext').addEventListener('click', () => {
     $('drillFeedback').textContent = 'That was the last drill. Nice work.';
   }
 });
+
+// Play a game against our own WASM engine (separate from the analysis board).
+initPlay();
