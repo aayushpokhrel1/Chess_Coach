@@ -2,6 +2,7 @@ body {
   font-family: system-ui, sans-serif;
   margin: 2rem;
   color: #222;
+  background: #fafafa; /* explicit: without it the app's dark pane shows through and #222 text is invisible */
 }
 
 #pgn {
@@ -154,4 +155,79 @@ body {
 .promo button {
   margin-right: 4px;
   font-weight: 600;
+}
+
+/* --- readable tidy pass --- */
+#app {
+  max-width: 900px;
+}
+h1 {
+  margin-bottom: 1rem;
+}
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+button,
+select {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: #888;
+}
+button:disabled {
+  color: #aaa;
+  cursor: default;
+}
+input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #555;
+  font-size: 0.9rem;
+}
+.field select {
+  cursor: pointer;
+}
+
+/* --- play the engine --- */
+.play {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e6e6e6;
+}
+.play h2 {
+  margin: 0 0 0.75rem;
+}
+.play .controls {
+  flex-wrap: wrap;
+}
+.play-status {
+  min-height: 1.4rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
+  color: #444;
+}
+.play-board {
+  width: 480px;
+}
+.clock {
+  font-family: ui-monospace, monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: right;
+  min-height: 1.6rem;
+  padding: 0.1rem 0.4rem;
+  color: #333;
 }

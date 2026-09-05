@@ -70,10 +70,17 @@
             <option value="white">Play as White</option>
             <option value="black">Play as Black</option>
           </select>
+          <label class="field">Level <select id="playLevel"></select></label>
+          <label class="field">Time <select id="playTime"></select></label>
           <button id="newGame">New game</button>
-          <span id="playStatus"></span>
+          <button id="analyzeGame" disabled>Analyze this game</button>
         </div>
-        <div id="playBoard" class="board"></div>
+        <p id="playStatus" class="play-status"></p>
+        <div class="play-board">
+          <div id="clockEngine" class="clock"></div>
+          <div id="playBoard" class="board"></div>
+          <div id="clockYou" class="clock"></div>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
