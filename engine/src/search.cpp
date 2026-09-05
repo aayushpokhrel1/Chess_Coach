@@ -32,9 +32,23 @@ bool is_capture(const Board& b, const Move& m) {
         || m.flag == MoveFlag::EnPassant;
 }
 
+// Value of the piece captured by move m (en passant always takes a pawn).
+int victim_value(const Board& b, const Move& m) {
+    if (m.flag == MoveFlag::EnPassant) return piece_value(PieceType::Pawn);
+    return piece_value(b.squares[m.to].type);
+}
+
+// Captures first, and within captures Most-Valuable-Victim / Least-Valuable-Attacker
+// so alpha-beta tries queen-takes-queen before pawn-takes-pawn and cuts off sooner.
 void order_moves(const Board& b, std::vector<Move>& moves) {
-    std::stable_partition(moves.begin(), moves.end(),
-                          [&](const Move& m) { return is_capture(b, m); });
+    std::stable_sort(moves.begin(), moves.end(), [&](const Move& a, const Move& c) {
+        bool ca = is_capture(b, a), cc = is_capture(b, c);
+        if (ca != cc) return ca;                       // captures before quiets
+        if (!ca) return false;                         // keep quiet moves' order (stable)
+        int sa = victim_value(b, a) - piece_value(b.squares[a.from].type);
+        int sc = victim_value(b, c) - piece_value(b.squares[c.from].type);
+        return sa > sc;                                // higher MVV-LVA first
+    });
 }
 
 // Alpha-beta negamax. Same value as plain negamax, fewer nodes.
