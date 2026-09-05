@@ -3,6 +3,7 @@ graphify-out/
 
 # Build artifacts
 build/
+engine/build-wasm/
 *.o
 *.obj
 *.exe
