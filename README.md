@@ -59,7 +59,11 @@ Engine milestones (correctness before speed):
   browser in a Web Worker, powering a "play a game against your engine" mode in the coach.
   Stockfish stays the analysis engine (ours is too slow for depth-12); ours is the opponent
   you play. Phase 1 (the UCI `info` line and principal variation) also landed here.
-- [ ] **M7c. Optimization** (later) — transposition table, bitboards, deeper search.
+- [ ] **M7c. Optimization** (in progress): a transposition table landed (Zobrist hashing,
+  probe/store with Exact/Lower/Upper bounds, and searching the stored move first), which cut the
+  search roughly 6x (depth 6 from the start position went from about 24s to about 3.9s), so the
+  engine reaches deeper in the same time. Still to do: re-calibrate the play levels against the
+  stronger engine, then bitboards.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
@@ -108,8 +112,11 @@ npm test         # unit tests (Vitest)
 ```
 
 Analysis runs fully in the browser (Stockfish single-threaded WASM in a Web Worker), so the
-site hosts as static files with no backend. The "Play the engine" section runs OUR engine,
-compiled to WASM, in its own Web Worker: pick a color, New game, and play it (fixed think time).
+site hosts as static files with no backend. The "Play the engine" tab runs OUR engine, compiled
+to WASM, in its own Web Worker: pick a color, a strength level (labeled with a measured Elo, plus
+a random-move Novice for beginners), and a time control (a real clock for both sides), then play.
+You can step back and forth through the game, resign, and hand the finished game to the analysis
+tab. Strength levels come from the rating gauntlet in `web/scripts/gauntlet.mjs`.
 
 To rebuild the WASM engine (needs Emscripten; the built `web/public/engine/chesscoach.{js,wasm}`
 is committed so this is only needed after engine changes), from the repo root with the emsdk env
