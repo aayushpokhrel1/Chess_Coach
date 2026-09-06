@@ -8,63 +8,12 @@
   <body>
     <main id="app">
       <h1>Chess Coach</h1>
-      <div class="controls">
-        <select id="source">
-          <option value="lichess">Lichess</option>
-          <option value="chesscom">Chess.com</option>
-        </select>
-        <input id="fetchUser" placeholder="Username to import" />
-        <button id="fetchGames">Fetch games</button>
-        <span id="fetchStatus"></span>
-      </div>
-      <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
-      <div class="controls">
-        <button id="load">Load</button>
-        <button id="analyze">Analyze</button>
-        <span id="status"></span>
-      </div>
-      <div class="controls">
-        <input id="username" placeholder="Your username (as in the PGN)" />
-        <button id="analyzeAll">Analyze all games</button>
-        <button id="startDrills" hidden>Start drills</button>
-        <span id="reportStatus"></span>
-      </div>
-      <div id="report" class="report"></div>
-      <div id="drill" class="drill" hidden>
-        <p id="drillPrompt"></p>
-        <div id="promo" class="promo" hidden>
-          Promote to:
-          <button data-p="q">Q</button>
-          <button data-p="r">R</button>
-          <button data-p="b">B</button>
-          <button data-p="n">N</button>
-        </div>
-        <p id="drillFeedback"></p>
-        <div class="controls">
-          <button id="drillAnswer">Show answer</button>
-          <button id="drillNext">Next</button>
-          <span id="drillProgress"></span>
-        </div>
-      </div>
-      <div class="layout">
-        <div>
-          <div class="board-row">
-            <div id="evalbar" class="evalbar"><div id="evalfill" class="evalfill"></div></div>
-            <div id="board" class="board"></div>
-          </div>
-          <div id="nav">
-            <button id="prev">&larr;</button>
-            <span id="ply">-</span>
-            <button id="next">&rarr;</button>
-          </div>
-        </div>
-        <div class="side">
-          <div id="explain" class="explain"></div>
-          <ol id="moves" class="moves"></ol>
-        </div>
-      </div>
-      <section id="play" class="play">
-        <h2>Play the engine</h2>
+      <nav class="tabs">
+        <button id="tabPlay" class="tab active">Play the engine</button>
+        <button id="tabCoach" class="tab">Analyze &amp; drills</button>
+      </nav>
+
+      <section id="tab-play" class="tab-panel play">
         <div class="controls">
           <select id="playColor">
             <option value="white">Play as White</option>
@@ -82,6 +31,68 @@
           <div id="clockYou" class="clock"></div>
         </div>
       </section>
+
+      <div id="tab-coach" class="tab-panel" hidden>
+        <p class="tab-intro">
+          Import or paste games, analyze them move by move, and drill the mistakes you find.
+          Drills appear here once you have analyzed at least one game.
+        </p>
+        <div class="controls">
+          <select id="source">
+            <option value="lichess">Lichess</option>
+            <option value="chesscom">Chess.com</option>
+          </select>
+          <input id="fetchUser" placeholder="Username to import" />
+          <button id="fetchGames">Fetch games</button>
+          <span id="fetchStatus"></span>
+        </div>
+        <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
+        <div class="controls">
+          <button id="load">Load</button>
+          <button id="analyze">Analyze</button>
+          <span id="status"></span>
+        </div>
+        <div class="controls">
+          <input id="username" placeholder="Your username (as in the PGN)" />
+          <button id="analyzeAll">Analyze all games</button>
+          <button id="startDrills" hidden>Start drills</button>
+          <span id="reportStatus"></span>
+        </div>
+        <div id="report" class="report"></div>
+        <div id="drill" class="drill" hidden>
+          <p id="drillPrompt"></p>
+          <div id="promo" class="promo" hidden>
+            Promote to:
+            <button data-p="q">Q</button>
+            <button data-p="r">R</button>
+            <button data-p="b">B</button>
+            <button data-p="n">N</button>
+          </div>
+          <p id="drillFeedback"></p>
+          <div class="controls">
+            <button id="drillAnswer">Show answer</button>
+            <button id="drillNext">Next</button>
+            <span id="drillProgress"></span>
+          </div>
+        </div>
+        <div class="layout">
+          <div>
+            <div class="board-row">
+              <div id="evalbar" class="evalbar"><div id="evalfill" class="evalfill"></div></div>
+              <div id="board" class="board"></div>
+            </div>
+            <div id="nav">
+              <button id="prev">&larr;</button>
+              <span id="ply">-</span>
+              <button id="next">&rarr;</button>
+            </div>
+          </div>
+          <div class="side">
+            <div id="explain" class="explain"></div>
+            <ol id="moves" class="moves"></ol>
+          </div>
+        </div>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

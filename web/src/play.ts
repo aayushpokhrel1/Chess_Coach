@@ -246,4 +246,7 @@ export function initPlay() {
 
   $('newGame').addEventListener('click', () => void newGame());
   $('analyzeGame').addEventListener('click', analyzeGame);
+  // Re-fix the board's size when returning to the Play tab (chessground mis-sizes
+  // if the panel was hidden while it was created or resized).
+  document.addEventListener('tab:play', () => board?.redrawAll());
 }

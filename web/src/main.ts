@@ -40,6 +40,19 @@ const DEPTH = 12;
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 const $ = (id: string) => document.getElementById(id)!;
 
+// Tabs: Play (default) and Analyze & drills. A chessground board created in a
+// hidden panel sizes to 0, so redraw the panel's board when it becomes visible.
+function showTab(name: 'play' | 'coach') {
+  $('tab-play').hidden = name !== 'play';
+  $('tab-coach').hidden = name !== 'coach';
+  $('tabPlay').classList.toggle('active', name === 'play');
+  $('tabCoach').classList.toggle('active', name === 'coach');
+  if (name === 'coach') board.redrawAll();
+  document.dispatchEvent(new CustomEvent('tab:' + name)); // play.ts redraws its board on 'tab:play'
+}
+$('tabPlay').addEventListener('click', () => showTab('play'));
+$('tabCoach').addEventListener('click', () => showTab('coach'));
+
 // Remember the inputs (not the analysis) across refreshes.
 const SAVE_KEYS = ['pgn', 'username', 'fetchUser'] as const;
 function saveSession() {

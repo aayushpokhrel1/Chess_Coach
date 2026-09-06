@@ -201,15 +201,39 @@ input {
   cursor: pointer;
 }
 
+/* --- tabs --- */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 1.25rem;
+}
+.tab {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #777;
+  margin-bottom: -2px;
+}
+.tab:hover:not(.active) {
+  color: #444;
+  background: #f0f0f0;
+}
+.tab.active {
+  color: #1a1a1a;
+  border-bottom-color: #4a86e8;
+  font-weight: 600;
+}
+.tab-intro {
+  color: #666;
+  margin: 0 0 1rem;
+  max-width: 640px;
+}
+
 /* --- play the engine --- */
-.play {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid #e6e6e6;
-}
-.play h2 {
-  margin: 0 0 0.75rem;
-}
 .play .controls {
   flex-wrap: wrap;
 }
