@@ -1,6 +1,8 @@
 #include "search.hpp"
 #include "movegen.hpp"
 #include "eval.hpp"
+#include "tt.hpp"
+#include "zobrist.hpp"
 #include <vector>
 #include <algorithm>
 #include <chrono>
@@ -13,6 +15,7 @@ const int MATE_THRESHOLD = MATE - 1000;  // scores past this are forced mates
 using Clock = std::chrono::steady_clock;
 
 long g_nodes = 0;              // reset at the top of each public search entry point
+bool g_use_tt = true;         // transposition table on? (tests toggle it off to compare)
 bool g_timed = false;         // is the current search time-limited?
 bool g_can_stop = false;      // may we abort the current depth? (false during depth 1)
 bool g_stop = false;          // set true once the deadline has passed
@@ -117,6 +120,17 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
 
     if (ply < MAXPLY) g_pv_len[ply] = 0;
 
+    // Transposition table probe. If we have searched this exact position at least
+    // this deep and the stored bound settles the current [alpha, beta] window, reuse
+    // it. Even a too-shallow hit hands back the move that was best here, for ordering.
+    const uint64_t key = compute_hash(b);
+    Move tt_move{};
+    if (g_use_tt) {
+        int tt_score;
+        if (tt_probe(key, depth, ply, alpha, beta, tt_score, tt_move))
+            return tt_score;
+    }
+
     std::vector<Move> moves = generate_legal(b);
     if (moves.empty())
         return in_check(b, b.side_to_move) ? -(MATE - ply) : 0;
@@ -124,7 +138,17 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
         return quiesce(b, ply, alpha, beta);
 
     order_moves(b, moves);
+    // Search the TT move first: it was best here before, so it is the likeliest cutoff.
+    if (tt_move.from != NO_SQUARE) {
+        auto it = std::find_if(moves.begin(), moves.end(), [&](const Move& m) {
+            return m.from == tt_move.from && m.to == tt_move.to && m.promotion == tt_move.promotion;
+        });
+        if (it != moves.end()) std::rotate(moves.begin(), it, it + 1);
+    }
+
+    const int alpha_orig = alpha;   // the window we started with, for the store flag
     int best = -INF;
+    Move best_move{};
     for (const Move& m : moves) {
         Undo u = make_move(b, m);
         int score = -negamax(b, depth - 1, ply + 1, -beta, -alpha);
@@ -132,6 +156,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
         if (g_stop) return best;    // bail out fast; result discarded upstream
         if (score > best) {
             best = score;
+            best_move = m;
             if (score > alpha) {    // a PV move: record it and splice the child's line
                 alpha = score;
                 if (ply + 1 < MAXPLY) {
@@ -144,6 +169,16 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
             }
         }
         if (alpha >= beta) break;   // beta cutoff: opponent would never allow this node
+    }
+
+    // Store the result. The flag records how `best` sits against the original window:
+    // below it (never beat alpha) is an Upper bound, at/above beta (a cutoff) is a
+    // Lower bound, strictly inside is Exact.
+    if (g_use_tt) {
+        TTFlag flag = best <= alpha_orig ? TTFlag::Upper
+                    : best >= beta       ? TTFlag::Lower
+                                         : TTFlag::Exact;
+        tt_store(key, depth, ply, best, flag, best_move);
     }
     return best;
 }
@@ -169,6 +204,8 @@ int negamax_full(Board& b, int depth, int ply) {
 } // namespace
 
 long nodes_searched() { return g_nodes; }
+
+void search_use_tt(bool on) { g_use_tt = on; }
 
 int search_minimax(Board& b, int depth) {
     g_nodes = 0;
@@ -223,6 +260,7 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
 SearchResult search(Board& b, int max_depth) {
     g_timed = false;
     g_stop = false;
+    tt_clear();   // fresh table per search; iterative deepening reuses it across depths
     SearchResult result;
     result.best = Move{};
     result.score = 0;
@@ -235,6 +273,7 @@ SearchResult search(Board& b, int max_depth) {
 SearchResult search_timed(Board& b, const SearchLimits& limits) {
     g_timed = (limits.budget_ms > 0);
     g_stop = false;
+    tt_clear();   // fresh table per search; iterative deepening reuses it across depths
     g_deadline = Clock::now() + std::chrono::milliseconds(limits.budget_ms);
 
     SearchResult best;

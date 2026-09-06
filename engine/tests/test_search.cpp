@@ -34,14 +34,33 @@ TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer n
     // A busy midgame position (after 1.e4 e5) so pruning has something to cut.
     Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
 
+    // Isolate alpha-beta here: with the TT on, a transposition can hand back a
+    // DEEPER score at a leaf, which legitimately shifts a fixed-depth value. That
+    // is the TT working, not a pruning bug, so turn it off for this equality check.
+    search_use_tt(false);
     int full = search_minimax(b, 3);
     long full_nodes = nodes_searched();
 
     int pruned = search(b, 3).score;
     long pruned_nodes = nodes_searched();
+    search_use_tt(true);
 
     CHECK(pruned == full);              // pruning must not change the value
     CHECK(pruned_nodes < full_nodes);   // but it must visit fewer nodes
+}
+
+TEST_CASE("the transposition table cuts nodes at a fixed depth") {
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+
+    search_use_tt(false);
+    search(b, 4);
+    long without = nodes_searched();
+
+    search_use_tt(true);
+    search(b, 4);
+    long with = nodes_searched();
+
+    CHECK(with < without);   // reusing searched positions (and TT-move ordering) saves nodes
 }
 
 TEST_CASE("search returns a principal variation starting with the best move") {
