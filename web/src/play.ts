@@ -21,6 +21,10 @@ const $ = (id: string) => document.getElementById(id)!;
 // measured the same as depth 3 (no gain without a transposition table, and
 // slower), so it is dropped. Re-run the gauntlet with more games to refine.
 const LEVELS = [
+  // Novice is BELOW the engine's floor (depth-1 search is already ~1050), so it
+  // is weakened by playing a random legal move `random` of the time. That rate is
+  // an uncalibrated guess, not a gauntlet number; tune it if it plays too strong.
+  { label: 'Novice (~600)', depth: 1, random: 0.6 },
   { label: 'Beginner (~1050)', depth: 1 },
   { label: 'Intermediate (~1300)', depth: 2 },
   { label: 'Advanced (~1400)', depth: 3 },
@@ -89,7 +93,23 @@ export function initPlay() {
   let game = new Chess();
   let human: 'white' | 'black' = 'white';
   let depth = LEVELS[0].depth; // overwritten on New game from the Level select
+  let randomProb = 0;          // Novice weakening: chance to play a random legal move
   const moves: string[] = []; // uci moves so far, for `position startpos moves ...`
+  let viewIdx = 0;            // board history cursor; == moves.length means the live position
+
+  const randomMove = (g: Chess): string => {
+    const ms = g.moves({ verbose: true });
+    const m = ms[Math.floor(Math.random() * ms.length)];
+    return m.from + m.to + (m.promotion ?? '');
+  };
+  const replayFen = (idx: number): string => {
+    const c = new Chess();
+    for (let i = 0; i < idx; i++) {
+      const u = moves[i];
+      c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u.slice(4) || undefined });
+    }
+    return c.fen();
+  };
 
   // Clock state. clock[w/b] is remaining ms; unlimited when tc.ms === 0.
   let clock = { w: 0, b: 0 };
@@ -144,6 +164,7 @@ export function initPlay() {
     stopTicker();
     setStatus(msg);
     board!.set({ movable: { color: undefined, dests: new Map() } });
+    ($('resign') as HTMLButtonElement).disabled = true;
     ($('analyzeGame') as HTMLButtonElement).disabled = moves.length === 0;
   }
 
@@ -154,11 +175,19 @@ export function initPlay() {
     return 'Game over.';
   }
 
+  function updateNav() {
+    ($('playPrev') as HTMLButtonElement).disabled = viewIdx <= 0;
+    ($('playNext') as HTMLButtonElement).disabled = viewIdx >= moves.length;
+    $('playPos').textContent = moves.length === 0 ? '' : viewIdx >= moves.length ? 'live' : `${viewIdx} / ${moves.length}`;
+  }
+
   function render() {
-    const turn = game.turn() === 'w' ? 'white' : 'black';
-    const humansTurn = turn === human && !over && !game.isGameOver();
+    const atLive = viewIdx >= moves.length;
+    const fen = atLive ? game.fen() : replayFen(viewIdx); // show a past position when reviewing
+    const turn = fen.split(' ')[1] === 'w' ? 'white' : 'black';
+    const humansTurn = atLive && !over && turn === human && !game.isGameOver();
     board!.set({
-      fen: game.fen().split(' ')[0],
+      fen: fen.split(' ')[0],
       turnColor: turn,
       movable: {
         free: false,
@@ -168,6 +197,9 @@ export function initPlay() {
       },
     });
     renderClocks();
+    updateNav();
+    if (!atLive) { setStatus(`Reviewing move ${viewIdx} of ${moves.length}. Use the arrow to return to the game.`); return; }
+    if (over) return; // status already set (game over or flag); do not overwrite
     const done = gameOverText();
     if (done) { endGame(done); return; }
     setStatus(humansTurn ? 'Your move.' : 'Engine thinking...');
@@ -185,6 +217,7 @@ export function initPlay() {
       return;
     }
     moves.push(orig + dest + (promo ?? ''));
+    viewIdx = moves.length; // snap the review cursor to the live position
     if (!unlimited) clock[human === 'white' ? 'w' : 'b'] += inc; // increment after moving
     render();
     if (!over && !game.isGameOver()) await engineMove();
@@ -192,11 +225,15 @@ export function initPlay() {
 
   async function engineMove() {
     const engSide = human === 'white' ? 'b' : 'w';
-    const uci = await askEngine(worker!, moves, depth);
-    if (over) return;            // flagged while the engine was thinking
+    // Novice weakening: play a random legal move some of the time instead of the
+    // engine's best. Otherwise ask the engine to search to the level's depth.
+    const uci =
+      randomProb && Math.random() < randomProb ? randomMove(game) : await askEngine(worker!, moves, depth);
+    if (over) return;            // flagged/resigned while the engine was thinking
     if (uci === '0000') return;  // no move (game-over is checked before we get here)
     game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || undefined });
     moves.push(uci);
+    viewIdx = moves.length;
     if (!unlimited) clock[engSide] += inc;
     render();
   }
@@ -205,13 +242,17 @@ export function initPlay() {
     stopTicker();
     over = false;
     human = ($('playColor') as HTMLSelectElement).value === 'black' ? 'black' : 'white';
-    depth = LEVELS[Number(levelSel.value)].depth;
+    const lvl = LEVELS[Number(levelSel.value)];
+    depth = lvl.depth;
+    randomProb = lvl.random ?? 0;
     const tc = TIMES[Number(timeSel.value)];
     unlimited = tc.ms === 0;
     clock = { w: tc.ms, b: tc.ms };
     inc = tc.inc;
     game = new Chess();
     moves.length = 0;
+    viewIdx = 0;
+    ($('resign') as HTMLButtonElement).disabled = false;
     ($('analyzeGame') as HTMLButtonElement).disabled = true;
     setStatus('Loading engine...');
     if (!worker) worker = await bootEngine();
@@ -244,7 +285,10 @@ export function initPlay() {
   }
 
   $('newGame').addEventListener('click', () => void newGame());
+  $('resign').addEventListener('click', () => { if (!over) endGame('You resigned. Engine wins.'); });
   $('analyzeGame').addEventListener('click', analyzeGame);
+  $('playPrev').addEventListener('click', () => { if (viewIdx > 0) { viewIdx--; render(); } });
+  $('playNext').addEventListener('click', () => { if (viewIdx < moves.length) { viewIdx++; render(); } });
   // Re-fix the board's size when returning to the Play tab (chessground mis-sizes
   // if the panel was hidden while it was created or resized).
   document.addEventListener('tab:play', () => board?.redrawAll());

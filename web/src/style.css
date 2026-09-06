@@ -237,6 +237,19 @@ input {
 .play .controls {
   flex-wrap: wrap;
 }
+#playNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+#playPos {
+  font-family: ui-monospace, monospace;
+  color: #666;
+  min-width: 4rem;
+  text-align: center;
+}
 .play-status {
   min-height: 1.4rem;
   margin: 0.5rem 0;

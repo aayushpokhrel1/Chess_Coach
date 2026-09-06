@@ -22,6 +22,7 @@
           <label class="field">Level <select id="playLevel"></select></label>
           <label class="field">Time <select id="playTime"></select></label>
           <button id="newGame">New game</button>
+          <button id="resign" disabled>Resign</button>
           <button id="analyzeGame" disabled>Analyze this game</button>
         </div>
         <p id="playStatus" class="play-status"></p>
@@ -29,6 +30,11 @@
           <div id="clockEngine" class="clock"></div>
           <div id="playBoard" class="board"></div>
           <div id="clockYou" class="clock"></div>
+          <div id="playNav">
+            <button id="playPrev" disabled>&larr;</button>
+            <span id="playPos"></span>
+            <button id="playNext" disabled>&rarr;</button>
+          </div>
         </div>
       </section>
 
