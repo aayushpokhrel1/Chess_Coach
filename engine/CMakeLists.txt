@@ -14,6 +14,7 @@ add_library(engine
     src/eval.cpp
     src/search.cpp
     src/uci.cpp
+    src/zobrist.cpp
 )
 target_include_directories(engine PUBLIC src)
 
@@ -40,6 +41,7 @@ else()
         tests/test_eval.cpp
         tests/test_search.cpp
         tests/test_uci.cpp
+        tests/test_zobrist.cpp
     )
     target_link_libraries(engine_tests PRIVATE engine)
     target_include_directories(engine_tests PRIVATE third_party)
