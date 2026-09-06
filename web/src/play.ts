@@ -14,17 +14,16 @@ import { legalDests } from './drill';
 
 const $ = (id: string) => document.getElementById(id)!;
 
-// Nominal strength levels. Our engine is NOT Elo-tested; these labels map a
-// search depth to an APPROXIMATE Elo so you know roughly who you are playing.
-// Anchor point we DO have: the engine beat skill-2 Stockfish at depth-limited
-// play. Calibrate for real by running a gauntlet vs Stockfish skill levels
-// (web/scripts/match.mjs) and converting score% to Elo.
-// ponytail: nominal table, replace with measured numbers after a calibration run.
+// Strength levels: search depth -> MEASURED Elo. Calibrated by playing each
+// depth vs Stockfish skills 0 and 3, alternating colors, and converting score
+// to Elo (web/scripts/gauntlet.mjs). Rough (4 games/anchor, +-150, and the
+// skill->Elo anchor is itself approximate), but real, not guessed. Depth 4
+// measured the same as depth 3 (no gain without a transposition table, and
+// slower), so it is dropped. Re-run the gauntlet with more games to refine.
 const LEVELS = [
-  { label: '~700 (Beginner)', depth: 1 },
-  { label: '~1000 (Casual)', depth: 2 },
-  { label: '~1300 (Intermediate)', depth: 3 },
-  { label: '~1600 (Club)', depth: 4 },
+  { label: 'Beginner (~1050)', depth: 1 },
+  { label: 'Intermediate (~1300)', depth: 2 },
+  { label: 'Advanced (~1400)', depth: 3 },
 ];
 
 // Time controls: initial ms + increment ms per move. ms 0 = unlimited (no clock).
@@ -82,14 +81,14 @@ export function initPlay() {
   // Fill the Level and Time selects once.
   const levelSel = $('playLevel') as HTMLSelectElement;
   const timeSel = $('playTime') as HTMLSelectElement;
-  LEVELS.forEach((l, i) => levelSel.add(new Option(l.label, String(i), i === 1, i === 1)));
+  LEVELS.forEach((l, i) => levelSel.add(new Option(l.label, String(i), i === 0, i === 0)));
   TIMES.forEach((t, i) => timeSel.add(new Option(t.label, String(i), i === 0, i === 0)));
 
   let board: Api | null = null;
   let worker: Worker | null = null;
   let game = new Chess();
   let human: 'white' | 'black' = 'white';
-  let depth = LEVELS[1].depth;
+  let depth = LEVELS[0].depth; // overwritten on New game from the Level select
   const moves: string[] = []; // uci moves so far, for `position startpos moves ...`
 
   // Clock state. clock[w/b] is remaining ms; unlimited when tc.ms === 0.
