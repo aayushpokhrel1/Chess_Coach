@@ -63,6 +63,27 @@ TEST_CASE("the transposition table cuts nodes at a fixed depth") {
     CHECK(with < without);   // reusing searched positions (and TT-move ordering) saves nodes
 }
 
+TEST_CASE("killer and history ordering cuts nodes at a fixed depth") {
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+
+    // Isolate ordering from the TT (both cut nodes). With the TT off, the only
+    // variable is quiet-move ordering, so any node drop is the heuristics working.
+    search_use_tt(false);
+
+    search_use_order_heur(false);
+    search(b, 5);
+    long without = nodes_searched();
+
+    search_use_order_heur(true);
+    search(b, 5);
+    long with = nodes_searched();
+
+    search_use_tt(true);
+    search_use_order_heur(true);
+
+    CHECK(with < without);   // trying killers / high-history quiets first prunes more
+}
+
 TEST_CASE("search returns a principal variation starting with the best move") {
     Board b = board_from_fen("4k3/8/8/8/8/3q4/8/3RK3 w - - 0 1"); // Rd1xd3 wins the queen
     SearchResult r = search(b, 3);
@@ -72,13 +93,15 @@ TEST_CASE("search returns a principal variation starting with the best move") {
     CHECK(r.depth == 3);
 }
 
-TEST_CASE("iterative deepening matches a single fixed-depth search") {
+TEST_CASE("iterative deepening reaches the same evaluation as a single fixed-depth search") {
     Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
     SearchResult id    = search(b, 3);
     SearchResult fixed = search_to_depth(b, 3);
-    CHECK(id.score     == fixed.score);
-    CHECK(id.best.from == fixed.best.from);
-    CHECK(id.best.to   == fixed.best.to);
+    // Score is the real invariant. The exact best move need NOT match: the killer /
+    // history heuristics make ID (which accumulates them over depths 1..3) and a lone
+    // depth-3 pass order moves differently, so among several equally-optimal moves the
+    // tie can break either way. Both are still optimal, which the equal score proves.
+    CHECK(id.score == fixed.score);
 }
 
 TEST_CASE("search finds mate in two") {

@@ -22,6 +22,11 @@ long nodes_searched();  // nodes visited by the most recent search / search_mini
 // counts with and without it. Enabled by default.
 void search_use_tt(bool on);
 
+// Exposed for tests: turn the quiet-move ordering heuristics (killer moves +
+// history) off/on so a test can compare node counts with and without them.
+// Enabled by default.
+void search_use_order_heur(bool on);
+
 // One fixed-depth alpha-beta search. If `first` is a real move (from != NO_SQUARE)
 // it is searched first at the root; the iterative-deepening driver passes the
 // previous iteration's best move here to improve ordering.

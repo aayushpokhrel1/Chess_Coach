@@ -16,6 +16,7 @@ using Clock = std::chrono::steady_clock;
 
 long g_nodes = 0;              // reset at the top of each public search entry point
 bool g_use_tt = true;         // transposition table on? (tests toggle it off to compare)
+bool g_use_order_heur = true; // killer + history quiet-move ordering on? (tests toggle it)
 bool g_timed = false;         // is the current search time-limited?
 bool g_can_stop = false;      // may we abort the current depth? (false during depth 1)
 bool g_stop = false;          // set true once the deadline has passed
@@ -27,6 +28,25 @@ Clock::time_point g_deadline;
 const int MAXPLY = 128;
 Move g_pv[MAXPLY][MAXPLY];
 int  g_pv_len[MAXPLY];
+
+// Quiet-move ordering memory, both filled on beta cutoffs and cleared per search.
+// Killers: up to 2 quiet moves per ply that recently caused a cutoff there; tried
+// first among quiets in sibling nodes at the same ply. History: a per
+// (side, from, to) tally of cutoff usefulness (weighted depth*depth), the tiebreak
+// ordering for the remaining quiets.
+Move g_killers[MAXPLY][2];
+int  g_history[2][64][64];
+
+void clear_order_heur() {
+    for (int p = 0; p < MAXPLY; p++) g_killers[p][0] = g_killers[p][1] = Move{};
+    for (int s = 0; s < 2; s++)
+        for (int f = 0; f < 64; f++)
+            for (int t = 0; t < 64; t++) g_history[s][f][t] = 0;
+}
+
+bool same_move(const Move& a, const Move& c) {
+    return a.from == c.from && a.to == c.to && a.promotion == c.promotion;
+}
 
 // Every 2048 nodes, glance at the wall clock and set g_stop if time is up.
 inline void maybe_timeout() {
@@ -47,17 +67,45 @@ int victim_value(const Board& b, const Move& m) {
     return piece_value(b.squares[m.to].type);
 }
 
-// Captures first, and within captures Most-Valuable-Victim / Least-Valuable-Attacker
-// so alpha-beta tries queen-takes-queen before pawn-takes-pawn and cuts off sooner.
-void order_moves(const Board& b, std::vector<Move>& moves) {
+// A single sort key per move, higher = tried first. Tiers, from the top:
+//   captures  (MVV-LVA, so queen-takes-queen before pawn-takes-pawn)
+//   killer 1 / killer 2  (quiet moves that cut off at this ply before)
+//   other quiets  (by history score, the running cutoff tally)
+// The tier bases are spaced so a capture always outranks a killer and a killer
+// always outranks any history score (history is clamped below the killer base on
+// store). With the heuristics off, every quiet scores 0 and stable_sort keeps them
+// in generation order, i.e. the original captures-first-then-MVV behaviour.
+const int CAP_BASE = 1'000'000;
+const int KILLER1  =   900'000;
+const int KILLER2  =   800'000;
+const int HIST_MAX =   700'000;   // history is clamped here so it never reaches a killer
+
+int move_score(const Board& b, const Move& m, int ply) {
+    if (is_capture(b, m))
+        return CAP_BASE + victim_value(b, m) - piece_value(b.squares[m.from].type);
+    if (!g_use_order_heur || ply >= MAXPLY) return 0;
+    if (same_move(m, g_killers[ply][0])) return KILLER1;
+    if (same_move(m, g_killers[ply][1])) return KILLER2;
+    return g_history[static_cast<int>(b.side_to_move)][m.from][m.to];
+}
+
+void order_moves(const Board& b, std::vector<Move>& moves, int ply) {
     std::stable_sort(moves.begin(), moves.end(), [&](const Move& a, const Move& c) {
-        bool ca = is_capture(b, a), cc = is_capture(b, c);
-        if (ca != cc) return ca;                       // captures before quiets
-        if (!ca) return false;                         // keep quiet moves' order (stable)
-        int sa = victim_value(b, a) - piece_value(b.squares[a.from].type);
-        int sc = victim_value(b, c) - piece_value(b.squares[c.from].type);
-        return sa > sc;                                // higher MVV-LVA first
+        return move_score(b, a, ply) > move_score(b, c, ply);
     });
+}
+
+// Record a quiet move that just caused a beta cutoff at `ply` (searched to `depth`):
+// promote it into this ply's killer slots and bump its history score.
+void record_cutoff(const Board& b, const Move& m, int ply, int depth) {
+    if (!g_use_order_heur || ply >= MAXPLY || is_capture(b, m)) return;
+    if (!same_move(m, g_killers[ply][0])) {
+        g_killers[ply][1] = g_killers[ply][0];
+        g_killers[ply][0] = m;
+    }
+    int& h = g_history[static_cast<int>(b.side_to_move)][m.from][m.to];
+    h += depth * depth;
+    if (h > HIST_MAX) h = HIST_MAX;
 }
 
 // Leaf of the main search. Instead of trusting a static eval in the middle of a
@@ -99,7 +147,7 @@ int quiesce(Board& b, int ply, int alpha, int beta, int qdepth = 0) {
         moves.swap(caps);
     }
 
-    order_moves(b, moves);   // MVV-LVA
+    order_moves(b, moves, ply);   // MVV-LVA (quiescence is captures only, so no killers)
     for (const Move& m : moves) {
         Undo u = make_move(b, m);
         int score = -quiesce(b, ply + 1, -beta, -alpha, qdepth + 1);
@@ -137,7 +185,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
     if (depth == 0)
         return quiesce(b, ply, alpha, beta);
 
-    order_moves(b, moves);
+    order_moves(b, moves, ply);
     // Search the TT move first: it was best here before, so it is the likeliest cutoff.
     if (tt_move.from != NO_SQUARE) {
         auto it = std::find_if(moves.begin(), moves.end(), [&](const Move& m) {
@@ -168,7 +216,10 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
                 }
             }
         }
-        if (alpha >= beta) break;   // beta cutoff: opponent would never allow this node
+        if (alpha >= beta) {        // beta cutoff: opponent would never allow this node
+            record_cutoff(b, m, ply, depth);   // remember this quiet move for sibling ordering
+            break;
+        }
     }
 
     // Store the result. The flag records how `best` sits against the original window:
@@ -207,6 +258,8 @@ long nodes_searched() { return g_nodes; }
 
 void search_use_tt(bool on) { g_use_tt = on; }
 
+void search_use_order_heur(bool on) { g_use_order_heur = on; }
+
 int search_minimax(Board& b, int depth) {
     g_nodes = 0;
     g_timed = false;
@@ -226,7 +279,7 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
         return result;
     }
 
-    order_moves(b, moves);
+    order_moves(b, moves, 0);   // root is ply 0
     // Try the hint move first (from the previous, shallower iteration).
     if (first.from != NO_SQUARE) {
         auto it = std::find_if(moves.begin(), moves.end(), [&](const Move& m) {
@@ -260,7 +313,8 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
 SearchResult search(Board& b, int max_depth) {
     g_timed = false;
     g_stop = false;
-    tt_clear();   // fresh table per search; iterative deepening reuses it across depths
+    tt_clear();          // fresh table per search; iterative deepening reuses it across depths
+    clear_order_heur();  // fresh killers/history too, likewise reused across ID depths
     SearchResult result;
     result.best = Move{};
     result.score = 0;
@@ -273,7 +327,8 @@ SearchResult search(Board& b, int max_depth) {
 SearchResult search_timed(Board& b, const SearchLimits& limits) {
     g_timed = (limits.budget_ms > 0);
     g_stop = false;
-    tt_clear();   // fresh table per search; iterative deepening reuses it across depths
+    tt_clear();          // fresh table per search; iterative deepening reuses it across depths
+    clear_order_heur();  // fresh killers/history too, likewise reused across ID depths
     g_deadline = Clock::now() + std::chrono::milliseconds(limits.budget_ms);
 
     SearchResult best;
