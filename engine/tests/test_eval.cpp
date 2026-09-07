@@ -65,3 +65,14 @@ TEST_CASE("v2 penalizes doubled and isolated pawns") {
     Board b = board_from_fen("4k3/pp6/8/8/8/P7/P7/4K3 w - - 0 1"); // White a2,a3 vs Black a7,b7
     CHECK(positional_eval(b) < 0);
 }
+
+TEST_CASE("v2 king safety penalizes an exposed king, but only with enemy queens on") {
+    // White king on g1 with NO pawn cover; Black king on g8 behind f7/g7/h7. Queens on.
+    Board exposed = board_from_fen("3q2k1/5ppp/8/8/8/8/8/3Q2K1 w - - 0 1");
+    CHECK(positional_eval(exposed) < 0);              // White's bare king is punished
+
+    // Same shelter difference but the queens are gone: the term switches off, so White
+    // is no longer dinged for the exposed king (endgame kings should be active).
+    Board endgame = board_from_fen("6k1/5ppp/8/8/8/8/8/6K1 w - - 0 1");
+    CHECK(positional_eval(endgame) > positional_eval(exposed));
+}

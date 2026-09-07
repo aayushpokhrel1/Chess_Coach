@@ -43,6 +43,32 @@ int pawn_penalty(const Board& b, Color c) {
 int bishop_pair(const Board& b, Color c) {
     return popcount(b.bb[static_cast<int>(c)][2]) >= 2 ? BISHOP_PAIR : 0;
 }
+
+const int SHIELD = 12;   // penalty per file in front of the king with no pawn cover
+
+// King safety: penalize a king whose pawn shield (the three files in front of it) has
+// gaps. Only while the enemy still has a queen: in the queenless endgame the king should
+// be active, so exposure there is fine and we do not penalize it. Returns a penalty (<=0).
+int king_safety_side(const Board& b, Color c) {
+    int ci = static_cast<int>(c), enemy = 1 - ci;
+    if (b.bb[enemy][static_cast<int>(PieceType::Queen)] == 0) return 0;   // endgame: skip
+    uint64_t king = b.bb[ci][static_cast<int>(PieceType::King)];
+    if (king == 0) return 0;
+    Square k = lsb(king);
+    int kf = file_of(k), kr = rank_of(k), fwd = (c == Color::White) ? 1 : -1;
+    uint64_t pawns = b.bb[ci][0];
+    int covered = 0;
+    for (int df = -1; df <= 1; df++) {
+        int f = kf + df;
+        if (f < 0 || f > 7) continue;
+        // A friendly pawn on either of the two squares in front of this file is cover.
+        for (int step = 1; step <= 2; step++) {
+            int r = kr + step * fwd;
+            if (r >= 0 && r < 8 && bb_get(pawns, make_square(f, r))) { covered++; break; }
+        }
+    }
+    return -SHIELD * (3 - covered);
+}
 // Michniewski "Simplified Evaluation Function" tables, White's perspective,
 // printed rank 8 first, so index 0 = a8, index 63 = h1.
 const int PAWN_PST[64] = {
@@ -161,6 +187,7 @@ int positional_eval(const Board& b) {
     s += mobility_side(b, Color::White) - mobility_side(b, Color::Black);
     s += bishop_pair(b, Color::White)   - bishop_pair(b, Color::Black);
     s -= pawn_penalty(b, Color::White)  - pawn_penalty(b, Color::Black); // penalties hurt their side
+    s += king_safety_side(b, Color::White) - king_safety_side(b, Color::Black); // each is <=0
     return s;
 }
 
