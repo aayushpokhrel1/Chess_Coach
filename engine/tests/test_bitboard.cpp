@@ -24,6 +24,38 @@ TEST_CASE("bitboards match squares[] after FEN parse") {
     }
 }
 
+TEST_CASE("classical-ray slider and leaper attacks") {
+    // Rook on a1, empty board: whole a-file + rank 1 = 14 squares.
+    CHECK(popcount(rook_attacks(make_square(0, 0), 0)) == 14);
+
+    // Blocker on a4: the a-file attack stops at a4 (inclusive), a5..a8 drop off;
+    // the rank is still clear out to h1.
+    uint64_t occ = 1ULL << make_square(0, 3);            // a4
+    uint64_t rat = rook_attacks(make_square(0, 0), occ);
+    CHECK(bb_get(rat, make_square(0, 3)));               // a4 attacked (capturable)
+    CHECK(!bb_get(rat, make_square(0, 4)));              // a5 shielded behind it
+    CHECK(bb_get(rat, make_square(7, 0)));               // h1 still reachable
+
+    // Bishop on d4 with a blocker on f6: the NE ray stops at f6.
+    uint64_t occ2 = 1ULL << make_square(5, 5);           // f6
+    uint64_t bat = bishop_attacks(make_square(3, 3), occ2);
+    CHECK(bb_get(bat, make_square(5, 5)));               // f6 (capturable)
+    CHECK(!bb_get(bat, make_square(6, 6)));              // g7 shielded
+
+    // Knight on b1 hits exactly a3, c3, d2.
+    uint64_t nat = knight_attacks(make_square(1, 0));
+    CHECK(popcount(nat) == 3);
+    CHECK(bb_get(nat, make_square(0, 2)));               // a3
+    CHECK(bb_get(nat, make_square(2, 2)));               // c3
+    CHECK(bb_get(nat, make_square(3, 1)));               // d2
+
+    // A white pawn on d4 attacks c5 and e5; a black pawn on d4 attacks c3 and e3.
+    CHECK(pawn_attacks(Color::White, make_square(3, 3))
+          == ((1ULL << make_square(2, 4)) | (1ULL << make_square(4, 4))));
+    CHECK(pawn_attacks(Color::Black, make_square(3, 3))
+          == ((1ULL << make_square(2, 2)) | (1ULL << make_square(4, 2))));
+}
+
 static Move find_move(Board& b, const std::string& uci) {
     for (const Move& m : generate_legal(b))
         if (to_uci(m) == uci) return m;
