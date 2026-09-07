@@ -1,6 +1,48 @@
 #include "eval.hpp"
+#include "bitboard.hpp"
 
 namespace {
+// Eval v2 weights. These are tuning knobs, not laws: rough hand-set values that a
+// gauntlet can refine later. Mobility is per reachable square, lower for sliders so
+// their many squares do not swamp material.
+const int MOB_KNIGHT = 4, MOB_BISHOP = 4, MOB_ROOK = 2, MOB_QUEEN = 1;
+const int BISHOP_PAIR = 30;
+const int DOUBLED = 15;    // penalty per extra pawn stacked on a file
+const int ISOLATED = 15;   // penalty per pawn with no friendly pawn on an adjacent file
+
+const uint64_t FILE_A_BB = 0x0101010101010101ULL;
+inline uint64_t file_mask(int f) { return FILE_A_BB << f; }
+
+// Reachable squares (attacks minus own pieces) per piece, weighted by kind.
+int mobility_side(const Board& b, Color c) {
+    int ci = static_cast<int>(c);
+    uint64_t own = b.occ[ci];
+    int m = 0, s;
+    uint64_t bb;
+    bb = b.bb[ci][1]; while (bb) { s = pop_lsb(bb); m += MOB_KNIGHT * popcount(knight_attacks(s) & ~own); }
+    bb = b.bb[ci][2]; while (bb) { s = pop_lsb(bb); m += MOB_BISHOP * popcount(bishop_attacks(s, b.occ_all) & ~own); }
+    bb = b.bb[ci][3]; while (bb) { s = pop_lsb(bb); m += MOB_ROOK   * popcount(rook_attacks(s, b.occ_all) & ~own); }
+    bb = b.bb[ci][4]; while (bb) { s = pop_lsb(bb); m += MOB_QUEEN  * popcount(queen_attacks(s, b.occ_all) & ~own); }
+    return m;
+}
+
+// Doubled + isolated pawn penalty (a positive number; the caller subtracts it).
+int pawn_penalty(const Board& b, Color c) {
+    uint64_t pawns = b.bb[static_cast<int>(c)][0];
+    int pen = 0;
+    for (int f = 0; f < 8; f++) {
+        int cnt = popcount(pawns & file_mask(f));
+        if (cnt == 0) continue;
+        if (cnt > 1) pen += DOUBLED * (cnt - 1);
+        uint64_t adj = (f > 0 ? file_mask(f - 1) : 0) | (f < 7 ? file_mask(f + 1) : 0);
+        if (!(pawns & adj)) pen += ISOLATED * cnt;   // no friendly pawn beside this file
+    }
+    return pen;
+}
+
+int bishop_pair(const Board& b, Color c) {
+    return popcount(b.bb[static_cast<int>(c)][2]) >= 2 ? BISHOP_PAIR : 0;
+}
 // Michniewski "Simplified Evaluation Function" tables, White's perspective,
 // printed rank 8 first, so index 0 = a8, index 63 = h1.
 const int PAWN_PST[64] = {
@@ -114,7 +156,15 @@ int material_score(const Board& b) {
     return score;
 }
 
+int positional_eval(const Board& b) {
+    int s = 0;
+    s += mobility_side(b, Color::White) - mobility_side(b, Color::Black);
+    s += bishop_pair(b, Color::White)   - bishop_pair(b, Color::Black);
+    s -= pawn_penalty(b, Color::White)  - pawn_penalty(b, Color::Black); // penalties hurt their side
+    return s;
+}
+
 int evaluate(const Board& b) {
-    int score = material_score(b) + pst_score(b);
+    int score = material_score(b) + pst_score(b) + positional_eval(b);
     return (b.side_to_move == Color::White) ? score : -score;
 }

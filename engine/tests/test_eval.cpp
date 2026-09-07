@@ -41,3 +41,27 @@ TEST_CASE("piece-square tables move the score off pure material") {
     Board b = board_from_fen("4k3/8/8/3P4/8/8/8/4K3 w - - 0 1"); // white pawn d5
     CHECK(evaluate(b) != material_score(b));
 }
+
+TEST_CASE("v2 positional terms are symmetric at the start") {
+    CHECK(positional_eval(start_position()) == 0);   // mirror position, all terms cancel
+}
+
+TEST_CASE("v2 mobility rewards an active piece") {
+    // Equal material (a queen each). White's queen is centralized and open, Black's
+    // is boxed in the corner, so the positional term favors White.
+    Board b = board_from_fen("q3k3/8/8/8/3Q4/8/8/4K3 w - - 0 1"); // Qd4 vs Qa8
+    CHECK(positional_eval(b) > 0);
+}
+
+TEST_CASE("v2 rewards the bishop pair") {
+    // White keeps both bishops, Black has one; positional term favors White.
+    Board b = board_from_fen("2b1k3/8/8/8/8/8/8/2B1KB2 w - - 0 1"); // White Bc1,Bf1 vs Black Bc8
+    CHECK(positional_eval(b) > 0);
+}
+
+TEST_CASE("v2 penalizes doubled and isolated pawns") {
+    // White's a-pawns are doubled AND isolated; Black's a7/b7 are healthy. Only the
+    // pawn-structure term differs (no pieces), so White reads worse positionally.
+    Board b = board_from_fen("4k3/pp6/8/8/8/P7/P7/4K3 w - - 0 1"); // White a2,a3 vs Black a7,b7
+    CHECK(positional_eval(b) < 0);
+}

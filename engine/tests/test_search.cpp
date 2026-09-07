@@ -145,7 +145,9 @@ TEST_CASE("quiescence declines a poisoned capture") {
     // quiescence the recapture is seen, so White declines it and stays near equal.
     Board b = board_from_fen("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3");
     SearchResult r = search(b, 1);
-    CHECK(r.score < 90);                 // the pawn "win" is seen to cost the knight
+    // Comfortably below the ~+160 poisoned-pawn illusion (the bound is loose because
+    // eval v2's mobility/structure terms give White a small honest edge here, ~94cp).
+    CHECK(r.score < 120);                // the pawn "win" is seen to cost the knight
     CHECK(to_uci(r.best) != "f3e5");     // so Nxe5 is not chosen
 }
 
