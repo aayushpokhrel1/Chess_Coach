@@ -56,6 +56,21 @@ TEST_CASE("classical-ray slider and leaper attacks") {
           == ((1ULL << make_square(2, 2)) | (1ULL << make_square(4, 2))));
 }
 
+TEST_CASE("bitboard is_square_attacked agrees with the array reference") {
+    const char* fens[] = {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",             // start
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", // Kiwipete
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",                            // Position 3
+    };
+    for (const char* f : fens) {
+        Board b = board_from_fen(f);
+        for (Square s = 0; s < 64; s++) {
+            CHECK(is_square_attacked(b, s, Color::White) == is_square_attacked_ref(b, s, Color::White));
+            CHECK(is_square_attacked(b, s, Color::Black) == is_square_attacked_ref(b, s, Color::Black));
+        }
+    }
+}
+
 static Move find_move(Board& b, const std::string& uci) {
     for (const Move& m : generate_legal(b))
         if (to_uci(m) == uci) return m;

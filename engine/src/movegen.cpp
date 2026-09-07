@@ -1,6 +1,9 @@
 #include "movegen.hpp"
+#include "bitboard.hpp"
 
 namespace {
+inline int idx(PieceType t) { return static_cast<int>(t); }
+
 inline bool on_board(int f, int r) { return f >= 0 && f < 8 && r >= 0 && r < 8; }
 
 const int KNIGHT[8][2] = {{1,2},{2,1},{2,-1},{1,-2},{-1,-2},{-2,-1},{-2,1},{-1,2}};
@@ -134,7 +137,9 @@ void gen_castling(const Board& b, std::vector<Move>& out) {
 }
 } // namespace
 
-bool is_square_attacked(const Board& b, Square sq, Color by) {
+// Reference version (the old array scan). Kept only to differential-test the
+// bitboard one; removed in the cleanup task.
+bool is_square_attacked_ref(const Board& b, Square sq, Color by) {
     int f = file_of(sq), r = rank_of(sq);
 
     // Pawns: a `by` pawn attacking sq stands one rank toward its own side.
@@ -164,6 +169,23 @@ bool is_square_attacked(const Board& b, Square sq, Color by) {
     // Sliders.
     if (ray_hits(b, f, r, DIAG, by, PieceType::Bishop, PieceType::Queen)) return true;
     if (ray_hits(b, f, r, ORTH, by, PieceType::Rook,   PieceType::Queen)) return true;
+    return false;
+}
+
+// Is `sq` attacked by any piece of color `by`? Bitboard version: for each piece
+// kind, take the attacks FROM sq and intersect with `by`'s pieces of that kind (a
+// symmetric relation, so "who attacks sq" is "what sq's attacks land on").
+bool is_square_attacked(const Board& b, Square sq, Color by) {
+    int e = static_cast<int>(by);
+    // A `by` pawn attacks sq from where the OPPOSITE-color pawn on sq would attack.
+    Color notby = (by == Color::White) ? Color::Black : Color::White;
+    if (pawn_attacks(notby, sq) & b.bb[e][idx(PieceType::Pawn)])   return true;
+    if (knight_attacks(sq)      & b.bb[e][idx(PieceType::Knight)]) return true;
+    if (king_attacks(sq)        & b.bb[e][idx(PieceType::King)])   return true;
+    uint64_t diag  = b.bb[e][idx(PieceType::Bishop)] | b.bb[e][idx(PieceType::Queen)];
+    if (bishop_attacks(sq, b.occ_all) & diag) return true;
+    uint64_t orth  = b.bb[e][idx(PieceType::Rook)] | b.bb[e][idx(PieceType::Queen)];
+    if (rook_attacks(sq, b.occ_all) & orth)   return true;
     return false;
 }
 
