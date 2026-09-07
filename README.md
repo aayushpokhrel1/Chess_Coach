@@ -4,6 +4,9 @@ A personal chess-coaching website plus a chess engine written from scratch in C+
 built as two parallel learning tracks: beginner-friendly coaching, and a real engine
 you understand every layer of.
 
+**Live demo: https://aayushpokhrel1.github.io/Chess_Coach/** (play the C++ engine, or paste
+a game and get it analyzed by Stockfish with beginner explanations and drills).
+
 ## About
 
 Chess Coach is a learning project with two goals that reinforce each other: build a
