@@ -1,6 +1,8 @@
 import { parseInfo, parseBestMove, type Info, type Score } from './uciParse';
 
-const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js';
+// BASE_URL is "/" in dev and "/Chess_Coach/" in the Pages build, so this resolves
+// to the vendored Stockfish under whatever subpath the app is served from.
+const ENGINE_URL = import.meta.env.BASE_URL + 'stockfish/stockfish-18-lite-single.js';
 
 export interface Analysis {
   score: Score;

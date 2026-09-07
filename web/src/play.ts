@@ -67,7 +67,10 @@ function askEngine(worker: Worker, moves: string[], depth: number): Promise<stri
 
 // Handshake: create the worker and resolve once it answers `uci` with `uciok`.
 function bootEngine(): Promise<Worker> {
-  const worker = new Worker(new URL('/engine/chesscoach-worker.js', import.meta.url), {
+  // BASE_URL ("/" in dev, "/Chess_Coach/" on Pages) keeps the worker a plain public
+  // asset that resolves under the deploy subpath; the worker's own ./chesscoach.js
+  // and its .wasm are relative to it, so they follow automatically.
+  const worker = new Worker(new URL(import.meta.env.BASE_URL + 'engine/chesscoach-worker.js', import.meta.url), {
     type: 'module',
   });
   return new Promise((resolve) => {
