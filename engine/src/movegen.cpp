@@ -201,21 +201,22 @@ bool in_check(const Board& b, Color side) {
 
 std::vector<Move> generate_pseudo_legal(const Board& b) {
     std::vector<Move> out;
-    Color us = b.side_to_move;
-    for (Square s = 0; s < 64; s++) {
-        Piece p = b.squares[s];
-        if (p.color != us) continue;
-        switch (p.type) {
-            case PieceType::Knight: gen_offsets(b, s, KNIGHT, 8, out); break;
-            case PieceType::King:   gen_offsets(b, s, KING,   8, out); break;
-            case PieceType::Bishop: gen_slider(b, s, DIAG, out); break;
-            case PieceType::Rook:   gen_slider(b, s, ORTH, out); break;
-            case PieceType::Queen:  gen_slider(b, s, DIAG, out);
-                                    gen_slider(b, s, ORTH, out); break;
-            case PieceType::Pawn:   gen_pawn(b, s, out); break;
-            default: break;
-        }
-    }
+    Color us = b.side_to_move; int usi = static_cast<int>(us);
+    uint64_t own = b.occ[usi];
+
+    // Knights
+    { uint64_t bbp = b.bb[usi][1]; while(bbp){ Square from=pop_lsb(bbp); uint64_t t = knight_attacks(from) & ~own; while(t){ Square to=pop_lsb(t); out.push_back(Move{from,to,PieceType::None,MoveFlag::Normal}); } } }
+    // King
+    { uint64_t bbp = b.bb[usi][5]; while(bbp){ Square from=pop_lsb(bbp); uint64_t t = king_attacks(from) & ~own; while(t){ Square to=pop_lsb(t); out.push_back(Move{from,to,PieceType::None,MoveFlag::Normal}); } } }
+    // Bishops
+    { uint64_t bbp = b.bb[usi][2]; while(bbp){ Square from=pop_lsb(bbp); uint64_t t = bishop_attacks(from, b.occ_all) & ~own; while(t){ Square to=pop_lsb(t); out.push_back(Move{from,to,PieceType::None,MoveFlag::Normal}); } } }
+    // Rooks
+    { uint64_t bbp = b.bb[usi][3]; while(bbp){ Square from=pop_lsb(bbp); uint64_t t = rook_attacks(from, b.occ_all) & ~own; while(t){ Square to=pop_lsb(t); out.push_back(Move{from,to,PieceType::None,MoveFlag::Normal}); } } }
+    // Queens
+    { uint64_t bbp = b.bb[usi][4]; while(bbp){ Square from=pop_lsb(bbp); uint64_t t = queen_attacks(from, b.occ_all) & ~own; while(t){ Square to=pop_lsb(t); out.push_back(Move{from,to,PieceType::None,MoveFlag::Normal}); } } }
+    // Pawns (reuse existing gen_pawn)
+    { uint64_t bbp = b.bb[usi][0]; while(bbp){ Square from=pop_lsb(bbp); gen_pawn(b, from, out); } }
+
     gen_castling(b, out);
     return out;
 }
