@@ -10,6 +10,7 @@ import { summarize, type MoveRecord, type Report } from './report';
 import { legalDests, gradeAttempt, type Drill } from './drill';
 import { fetchLichess, fetchChessCom } from './import';
 import { barPercent } from './evalBar';
+import { buildGraph, type Graph } from './evalGraph';
 import { initPlay } from './play';
 
 const boardEl = document.getElementById('board')!;
@@ -30,6 +31,7 @@ interface MoveAnalysis {
 
 let moves: GameMove[] = [];
 let analyses: MoveAnalysis[] = [];
+let graph: Graph | null = null; // built after analysis; null hides the eval graph
 let idx = -1; // -1 = start position, else index into moves (show fenAfter)
 let drills: Drill[] = [];
 let drillIdx = 0;
@@ -122,6 +124,74 @@ function render() {
   // Eval bar (White fills from the bottom).
   const white = a ? barPercent(a.whiteEvalCp) : 50;
   ($('evalfill') as HTMLElement).style.height = `${white}%`;
+
+  // Best line the engine wanted from this position (its "plan"), in SAN.
+  $('bestline').textContent =
+    a && a.pvBefore.length ? `Best line: ${pvToSan(moves[idx].fenBefore, a.pvBefore)}` : '';
+
+  // Move the graph cursor to the current move.
+  const cursor = document.getElementById('ga-cursor');
+  if (cursor && graph && idx >= 0 && graph.nodes[idx]) {
+    const x = graph.nodes[idx].x;
+    cursor.setAttribute('x1', String(x));
+    cursor.setAttribute('x2', String(x));
+    cursor.removeAttribute('hidden');
+  } else if (cursor) {
+    cursor.setAttribute('hidden', '');
+  }
+}
+
+// Convert an engine PV (uci moves) into a short SAN line from the given position.
+function pvToSan(fenBefore: string, uci: string[], max = 6): string {
+  try {
+    const c = new Chess(fenBefore);
+    const out: string[] = [];
+    for (const u of uci.slice(0, max)) {
+      const mv = c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u.slice(4) || undefined });
+      if (!mv) break;
+      out.push(mv.san);
+    }
+    return out.join(' ');
+  } catch {
+    return '';
+  }
+}
+
+// Draw the chess.com-style eval graph as inline SVG: White's territory under the
+// eval line, a midline, colored dots at the moves that went wrong, and a movable
+// cursor. Clicking anywhere jumps to the nearest move.
+function renderGraph() {
+  const host = $('evalgraph');
+  if (!graph || graph.nodes.length === 0) {
+    host.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+  const g = graph;
+  const dots = g.markers
+    .map(
+      (m) =>
+        `<circle class="ga-dot q-${m.quality}" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="4" data-i="${m.index}"><title>move ${m.index + 1}: ${m.quality}</title></circle>`,
+    )
+    .join('');
+  host.innerHTML = `
+    <svg viewBox="0 0 ${g.width} ${g.height}" preserveAspectRatio="none" class="ga-svg">
+      <path class="ga-white" d="${g.whiteArea}" />
+      <line class="ga-mid" x1="0" y1="${g.midY}" x2="${g.width}" y2="${g.midY}" />
+      <polyline class="ga-line" points="${g.linePoints}" />
+      ${dots}
+      <line id="ga-cursor" class="ga-cursor" x1="0" y1="0" x2="0" y2="${g.height}" hidden />
+    </svg>`;
+  host.hidden = false;
+
+  const svg = host.querySelector('svg')!;
+  const jump = (clientX: number) => {
+    const rect = svg.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    idx = Math.round(frac * (g.nodes.length - 1));
+    render();
+  };
+  svg.addEventListener('click', (e) => jump(e.clientX));
 }
 
 async function analyzeGame() {
@@ -157,6 +227,8 @@ async function analyzeGame() {
     $('status').textContent = `analyzing ${i + 1}/${moves.length}`;
   }
   $('status').textContent = 'analysis complete';
+  graph = buildGraph(analyses.map((a) => ({ whiteEvalCp: a.whiteEvalCp, quality: a.quality })));
+  renderGraph();
   buildMoveList();
   idx = -1;
   render();
@@ -167,6 +239,8 @@ $('load').addEventListener('click', () => {
   try {
     moves = parsePgn(text);
     analyses = [];
+    graph = null;
+    renderGraph();
     idx = -1;
     $('status').textContent = `${moves.length} moves loaded`;
     buildMoveList();
