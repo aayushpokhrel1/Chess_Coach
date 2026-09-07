@@ -1,4 +1,5 @@
 #include "board.hpp"
+#include "bitboard.hpp"
 #include <sstream>
 
 Board board_from_fen(const std::string& fen) {
@@ -35,6 +36,7 @@ Board board_from_fen(const std::string& fen) {
 
     b.halfmove_clock = halfmove;
     b.fullmove_number = fullmove;
+    bb_rebuild(b);   // squares[] is filled; derive the bitboard view once
     return b;
 }
 

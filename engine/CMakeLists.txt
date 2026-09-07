@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(engine
     src/types.cpp
     src/board.cpp
+    src/bitboard.cpp
     src/move.cpp
     src/movegen.cpp
     src/perft.cpp
@@ -36,6 +37,7 @@ else()
         tests/test_main.cpp
         tests/test_types.cpp
         tests/test_board.cpp
+        tests/test_bitboard.cpp
         tests/test_move.cpp
         tests/test_movegen.cpp
         tests/test_perft.cpp
