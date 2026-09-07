@@ -41,6 +41,7 @@ TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer n
     // they only reorder moves and never change the value.
     search_use_tt(false);
     search_use_null(false);
+    search_use_lmr(false);
     int full = search_minimax(b, 3);
     long full_nodes = nodes_searched();
 
@@ -48,6 +49,7 @@ TEST_CASE("alpha-beta returns the same value as full-width minimax, with fewer n
     long pruned_nodes = nodes_searched();
     search_use_tt(true);
     search_use_null(true);
+    search_use_lmr(true);
 
     CHECK(pruned == full);              // pruning must not change the value
     CHECK(pruned_nodes < full_nodes);   // but it must visit fewer nodes
@@ -107,6 +109,29 @@ TEST_CASE("null-move pruning cuts nodes at a fixed depth") {
     search_use_null(true);
 
     CHECK(with < without);   // pruning nodes where even a free pass beats beta
+}
+
+TEST_CASE("late move reductions cut nodes at a fixed depth") {
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+
+    // Isolate LMR from the TT and null-move (all three prune). With those off, the
+    // node drop is late quiet moves being searched shallower first.
+    search_use_tt(false);
+    search_use_null(false);
+
+    search_use_lmr(false);
+    search(b, 5);
+    long without = nodes_searched();
+
+    search_use_lmr(true);
+    search(b, 5);
+    long with = nodes_searched();
+
+    search_use_tt(true);
+    search_use_null(true);
+    search_use_lmr(true);
+
+    CHECK(with < without);   // reducing late quiet moves visits fewer nodes
 }
 
 TEST_CASE("search returns a principal variation starting with the best move") {

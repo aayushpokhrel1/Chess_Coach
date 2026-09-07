@@ -32,6 +32,10 @@ void search_use_order_heur(bool on);
 // test must disable it alongside the TT. Enabled by default.
 void search_use_null(bool on);
 
+// Exposed for tests: turn late move reductions off/on. Also a heuristic that can
+// change the value, so an exact-equality test disables it too. Enabled by default.
+void search_use_lmr(bool on);
+
 // One fixed-depth alpha-beta search. If `first` is a real move (from != NO_SQUARE)
 // it is searched first at the root; the iterative-deepening driver passes the
 // previous iteration's best move here to improve ordering.

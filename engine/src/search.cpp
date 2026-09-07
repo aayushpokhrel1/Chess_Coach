@@ -18,6 +18,7 @@ long g_nodes = 0;              // reset at the top of each public search entry p
 bool g_use_tt = true;         // transposition table on? (tests toggle it off to compare)
 bool g_use_order_heur = true; // killer + history quiet-move ordering on? (tests toggle it)
 bool g_use_null = true;       // null-move pruning on? (a heuristic; tests toggle it off)
+bool g_use_lmr = true;        // late move reductions on? (a heuristic; tests toggle it off)
 bool g_timed = false;         // is the current search time-limited?
 bool g_can_stop = false;      // may we abort the current depth? (false during depth 1)
 bool g_stop = false;          // set true once the deadline has passed
@@ -199,6 +200,8 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
     if (depth == 0)
         return quiesce(b, ply, alpha, beta);
 
+    const bool node_in_check = in_check(b, b.side_to_move);   // reused by null-move + LMR
+
     // Null-move pruning: hand the opponent a free move; if our position is still so
     // strong that even after passing we stay >= beta, no real move of ours would do
     // worse, so prune the node. Guards, each blocking a way the free pass would lie:
@@ -206,7 +209,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
     // search, some non-pawn material (avoid zugzwang), not two nulls in a row, and
     // not inside a mate-scoring window (do not trade a real mate for a fail-high beta).
     if (g_use_null && can_null && depth >= 3 && beta < MATE_THRESHOLD
-            && !in_check(b, b.side_to_move)
+            && !node_in_check
             && has_non_pawn_material(b, b.side_to_move)) {
         const int R = 2;   // reduce the pass search by this many plies
         Color saved_side = b.side_to_move;
@@ -232,9 +235,25 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
     const int alpha_orig = alpha;   // the window we started with, for the store flag
     int best = -INF;
     Move best_move{};
+    int move_index = 0;
     for (const Move& m : moves) {
+        bool quiet = !is_capture(b, m) && m.flag != MoveFlag::Promotion;
         Undo u = make_move(b, m);
-        int score = -negamax(b, depth - 1, ply + 1, -beta, -alpha);
+        // Late move reductions: search a late-ordered quiet move at reduced depth. If it
+        // beats alpha we do not trust the shallow score, so we re-search at full depth.
+        // Guards: heuristic on; enough depth; past the first few (well-ordered) moves; a
+        // quiet, non-checking move; and not while we are in check (all evasions matter).
+        bool gives_check = in_check(b, b.side_to_move);   // opponent is to move now
+        int score;
+        if (g_use_lmr && quiet && !gives_check && !node_in_check
+                && depth >= 3 && move_index >= 3) {
+            int R = (depth >= 6 && move_index >= 6) ? 2 : 1;
+            score = -negamax(b, depth - 1 - R, ply + 1, -beta, -alpha);
+            if (score > alpha)   // the reduction looked too good; verify at full depth
+                score = -negamax(b, depth - 1, ply + 1, -beta, -alpha);
+        } else {
+            score = -negamax(b, depth - 1, ply + 1, -beta, -alpha);
+        }
         unmake_move(b, m, u);
         if (g_stop) return best;    // bail out fast; result discarded upstream
         if (score > best) {
@@ -255,6 +274,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
             record_cutoff(b, m, ply, depth);   // remember this quiet move for sibling ordering
             break;
         }
+        move_index++;
     }
 
     // Store the result. The flag records how `best` sits against the original window:
@@ -296,6 +316,8 @@ void search_use_tt(bool on) { g_use_tt = on; }
 void search_use_order_heur(bool on) { g_use_order_heur = on; }
 
 void search_use_null(bool on) { g_use_null = on; }
+
+void search_use_lmr(bool on) { g_use_lmr = on; }
 
 int search_minimax(Board& b, int depth) {
     g_nodes = 0;
