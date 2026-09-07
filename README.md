@@ -59,11 +59,16 @@ Engine milestones (correctness before speed):
   browser in a Web Worker, powering a "play a game against your engine" mode in the coach.
   Stockfish stays the analysis engine (ours is too slow for depth-12); ours is the opponent
   you play. Phase 1 (the UCI `info` line and principal variation) also landed here.
-- [ ] **M7c. Optimization** (in progress): a transposition table landed (Zobrist hashing,
-  probe/store with Exact/Lower/Upper bounds, and searching the stored move first), which cut the
-  search roughly 6x (depth 6 from the start position went from about 24s to about 3.9s), so the
-  engine reaches deeper in the same time. Still to do: re-calibrate the play levels against the
-  stronger engine, then bitboards.
+- [x] **M7c. Optimization**: a transposition table (Zobrist hashing, Exact/Lower/Upper bounds,
+  stored-move-first), then killer-move and history quiet-move ordering, then null-move pruning, then
+  a bitboard board representation (hybrid: a `uint64_t` per piece kind alongside the mailbox, with
+  classical-ray sliding attacks and a full bitboard move generator, proven by unchanged perft). The
+  start-position depth-6 search fell from about 24s to about 0.35s (roughly 68x). The play levels
+  were re-calibrated against the stronger engine (Beginner ~1190 / Intermediate ~1520 / Advanced
+  ~1660, measured vs Stockfish).
+- [x] **Evaluation v2**: on top of material + piece-square tables, the engine now scores mobility
+  (how many squares each piece reaches), the bishop pair, and doubled/isolated pawns, so it plays
+  more purposeful, developing chess rather than only counting material.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
@@ -154,4 +159,6 @@ docs/     # design spec and per-milestone implementation plans
   [Coach C3 drills](docs/superpowers/plans/2026-09-02-coach-m3-drills.md),
   [Coach C4 polish](docs/superpowers/plans/2026-09-02-coach-m4-polish.md),
   [M7a quiescence](docs/superpowers/plans/2026-09-05-engine-m7a-quiescence.md),
-  [M7b WASM + play](docs/superpowers/plans/2026-09-05-engine-m7b-wasm.md)
+  [M7b WASM + play](docs/superpowers/plans/2026-09-05-engine-m7b-wasm.md),
+  [M7c transposition table](docs/superpowers/plans/2026-09-06-engine-m7c-transposition-table.md),
+  [M7c bitboards](docs/superpowers/plans/2026-09-07-engine-m7c-bitboards.md)
