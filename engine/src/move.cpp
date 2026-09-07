@@ -1,5 +1,6 @@
 #include "move.hpp"
 #include "types.hpp"
+#include "bitboard.hpp"
 
 std::string to_uci(const Move& m) {
     std::string s;
@@ -30,33 +31,33 @@ Undo make_move(Board& b, const Move& m) {
                 || m.flag == MoveFlag::EnPassant;
     bool pawn_move = moving.type == PieceType::Pawn;
 
-    // Move the piece.
-    b.squares[m.to] = moving;
-    b.squares[m.from] = Piece{Color::None, PieceType::None};
+    // Move the piece (helpers keep squares[] and the bitboards in sync). Clear a
+    // normal captured piece off the destination first, so move_piece lands on empty.
+    if (m.flag != MoveFlag::EnPassant && b.squares[m.to].type != PieceType::None)
+        remove_piece(b, m.to);
+    move_piece(b, m.from, m.to);
 
     // En passant: remove (and record) the pawn one rank behind the destination.
     if (m.flag == MoveFlag::EnPassant) {
         int behind = (us == Color::White) ? -1 : 1;
         Square cap = make_square(file_of(m.to), rank_of(m.to) + behind);
         u.captured = b.squares[cap];     // the pawn taken en passant
-        b.squares[cap] = Piece{Color::None, PieceType::None};
+        remove_piece(b, cap);
     }
 
-    // Promotion: swap the pawn for the chosen piece.
+    // Promotion: swap the pawn we just moved for the chosen piece.
     if (m.flag == MoveFlag::Promotion) {
-        b.squares[m.to] = Piece{us, m.promotion};
+        remove_piece(b, m.to);
+        add_piece(b, m.to, Piece{us, m.promotion});
     }
 
     // Castling: relocate the rook.
     if (m.flag == MoveFlag::Castle) {
         int r = rank_of(m.to);
-        if (file_of(m.to) == 6) {        // kingside: rook h -> f
-            b.squares[make_square(5, r)] = b.squares[make_square(7, r)];
-            b.squares[make_square(7, r)] = Piece{Color::None, PieceType::None};
-        } else {                         // queenside: rook a -> d
-            b.squares[make_square(3, r)] = b.squares[make_square(0, r)];
-            b.squares[make_square(0, r)] = Piece{Color::None, PieceType::None};
-        }
+        if (file_of(m.to) == 6)          // kingside: rook h -> f
+            move_piece(b, make_square(7, r), make_square(5, r));
+        else                             // queenside: rook a -> d
+            move_piece(b, make_square(0, r), make_square(3, r));
     }
 
     // En passant target: set on a double push, cleared otherwise.
@@ -96,33 +97,30 @@ void unmake_move(Board& b, const Move& m, const Undo& u) {
     b.halfmove_clock = u.halfmove_clock;
     b.fullmove_number = u.fullmove_number;
 
-    // Move the piece back; a promotion returns to a pawn.
-    Piece moved = b.squares[m.to];
+    // Move the piece back; a promotion returns to a pawn. (to is emptied here; any
+    // captured piece is restored onto it next.)
     if (m.flag == MoveFlag::Promotion) {
-        b.squares[m.from] = Piece{us, PieceType::Pawn};
+        remove_piece(b, m.to);                          // the promoted piece
+        add_piece(b, m.from, Piece{us, PieceType::Pawn});
     } else {
-        b.squares[m.from] = moved;
+        move_piece(b, m.to, m.from);
     }
-    b.squares[m.to] = Piece{Color::None, PieceType::None};
 
     // Restore the captured piece.
     if (m.flag == MoveFlag::EnPassant) {
         int behind = (us == Color::White) ? -1 : 1;
         Square cap = make_square(file_of(m.to), rank_of(m.to) + behind);
-        b.squares[cap] = u.captured;     // the pawn taken en passant; `to` stays empty
-    } else {
-        b.squares[m.to] = u.captured;    // empty piece if the move was not a capture
+        add_piece(b, cap, u.captured);   // the pawn taken en passant; `to` stays empty
+    } else if (u.captured.type != PieceType::None) {
+        add_piece(b, m.to, u.captured);  // put the captured piece back on the destination
     }
 
     // Undo the castle's rook move.
     if (m.flag == MoveFlag::Castle) {
         int r = rank_of(m.to);
-        if (file_of(m.to) == 6) {        // rook f -> h
-            b.squares[make_square(7, r)] = b.squares[make_square(5, r)];
-            b.squares[make_square(5, r)] = Piece{Color::None, PieceType::None};
-        } else {                         // rook d -> a
-            b.squares[make_square(0, r)] = b.squares[make_square(3, r)];
-            b.squares[make_square(3, r)] = Piece{Color::None, PieceType::None};
-        }
+        if (file_of(m.to) == 6)          // rook f -> h
+            move_piece(b, make_square(5, r), make_square(7, r));
+        else                             // rook d -> a
+            move_piece(b, make_square(3, r), make_square(0, r));
     }
 }
