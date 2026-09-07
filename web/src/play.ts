@@ -18,17 +18,17 @@ const $ = (id: string) => document.getElementById(id)!;
 // depth vs Stockfish skills 0 and 3, alternating colors, and converting score
 // to Elo (web/scripts/gauntlet.mjs). Rough (12 games/anchor, +-150, and the
 // skill->Elo anchor is itself approximate), but real, not guessed. Re-measured
-// after the transposition table landed: depths 2 and 3 now score the SAME
-// (~1430, within the error bar), so depth 3 is dropped (same strength, slower)
-// and depth 4 (~1600, which separated cleanly this time) becomes the top level.
+// after null-move pruning + bitboards + eval v2: the ladder rose ~60-100 Elo.
+// Depths 2 and 3 still score the SAME (~1520 vs ~1536, within the error bar), so
+// depth 3 stays dropped (same strength, slower) and depth 4 (~1660) is the top.
 const LEVELS = [
-  // Novice is BELOW the engine's floor (depth-1 search is already ~1130), so it
+  // Novice is BELOW the engine's floor (depth-1 search is already ~1190), so it
   // is weakened by playing a random legal move `random` of the time. That rate is
   // an uncalibrated guess, not a gauntlet number; tune it if it plays too strong.
   { label: 'Novice (~600)', depth: 1, random: 0.6 },
-  { label: 'Beginner (~1130)', depth: 1 },
-  { label: 'Intermediate (~1430)', depth: 2 },
-  { label: 'Advanced (~1600)', depth: 4 },
+  { label: 'Beginner (~1190)', depth: 1 },
+  { label: 'Intermediate (~1520)', depth: 2 },
+  { label: 'Advanced (~1660)', depth: 4 },
 ];
 
 // Time controls: initial ms + increment ms per move. ms 0 = unlimited (no clock).
