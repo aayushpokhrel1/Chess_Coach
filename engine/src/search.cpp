@@ -17,6 +17,7 @@ using Clock = std::chrono::steady_clock;
 long g_nodes = 0;              // reset at the top of each public search entry point
 bool g_use_tt = true;         // transposition table on? (tests toggle it off to compare)
 bool g_use_order_heur = true; // killer + history quiet-move ordering on? (tests toggle it)
+bool g_use_null = true;       // null-move pruning on? (a heuristic; tests toggle it off)
 bool g_timed = false;         // is the current search time-limited?
 bool g_can_stop = false;      // may we abort the current depth? (false during depth 1)
 bool g_stop = false;          // set true once the deadline has passed
@@ -53,6 +54,19 @@ inline void maybe_timeout() {
     if (!g_timed || !g_can_stop) return;
     if ((++g_check_counter & 2047) == 0 && Clock::now() >= g_deadline)
         g_stop = true;
+}
+
+// Does `side` have any piece other than pawns and the king? Null-move pruning is
+// unsafe in zugzwang (where passing is artificially good), and king-and-pawn
+// endgames are the common zugzwang case, so we only null-move when this is true.
+// ponytail: O(64) scan per attempt; a bitboard popcount makes this free later.
+bool has_non_pawn_material(const Board& b, Color side) {
+    for (Square s = 0; s < 64; s++) {
+        const Piece& p = b.squares[s];
+        if (p.color == side && p.type != PieceType::Pawn && p.type != PieceType::King)
+            return true;
+    }
+    return false;
 }
 
 // Captures first: cheap move ordering so alpha-beta cutoffs land early.
@@ -161,7 +175,7 @@ int quiesce(Board& b, int ply, int alpha, int beta, int qdepth = 0) {
 }
 
 // Alpha-beta negamax. Same value as plain negamax, fewer nodes.
-int negamax(Board& b, int depth, int ply, int alpha, int beta) {
+int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = true) {
     maybe_timeout();
     if (g_stop) return 0;   // aborted: this value is discarded upstream
     g_nodes++;
@@ -184,6 +198,27 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta) {
         return in_check(b, b.side_to_move) ? -(MATE - ply) : 0;
     if (depth == 0)
         return quiesce(b, ply, alpha, beta);
+
+    // Null-move pruning: hand the opponent a free move; if our position is still so
+    // strong that even after passing we stay >= beta, no real move of ours would do
+    // worse, so prune the node. Guards, each blocking a way the free pass would lie:
+    // not in check (can't pass out of check), enough depth left for the reduced
+    // search, some non-pawn material (avoid zugzwang), not two nulls in a row, and
+    // not inside a mate-scoring window (do not trade a real mate for a fail-high beta).
+    if (g_use_null && can_null && depth >= 3 && beta < MATE_THRESHOLD
+            && !in_check(b, b.side_to_move)
+            && has_non_pawn_material(b, b.side_to_move)) {
+        const int R = 2;   // reduce the pass search by this many plies
+        Color saved_side = b.side_to_move;
+        Square saved_ep = b.en_passant;
+        b.side_to_move = (saved_side == Color::White) ? Color::Black : Color::White;
+        b.en_passant = NO_SQUARE;   // a pass clears any en-passant right
+        int null_score = -negamax(b, depth - 1 - R, ply + 1, -beta, -beta + 1, false);
+        b.side_to_move = saved_side;
+        b.en_passant = saved_ep;
+        if (g_stop) return 0;                   // aborted: value discarded upstream
+        if (null_score >= beta) return beta;    // fail-high: prune this node
+    }
 
     order_moves(b, moves, ply);
     // Search the TT move first: it was best here before, so it is the likeliest cutoff.
@@ -259,6 +294,8 @@ long nodes_searched() { return g_nodes; }
 void search_use_tt(bool on) { g_use_tt = on; }
 
 void search_use_order_heur(bool on) { g_use_order_heur = on; }
+
+void search_use_null(bool on) { g_use_null = on; }
 
 int search_minimax(Board& b, int depth) {
     g_nodes = 0;

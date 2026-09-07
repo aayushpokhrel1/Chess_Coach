@@ -27,6 +27,11 @@ void search_use_tt(bool on);
 // Enabled by default.
 void search_use_order_heur(bool on);
 
+// Exposed for tests: turn null-move pruning off/on. It is a forward-pruning
+// heuristic (it changes the value, not just the node count), so an exact-equality
+// test must disable it alongside the TT. Enabled by default.
+void search_use_null(bool on);
+
 // One fixed-depth alpha-beta search. If `first` is a real move (from != NO_SQUARE)
 // it is searched first at the root; the iterative-deepening driver passes the
 // previous iteration's best move here to improve ordering.
