@@ -69,9 +69,16 @@ Engine milestones (correctness before speed):
   start-position depth-6 search fell from about 24s to about 0.35s (roughly 68x). The play levels
   were re-calibrated against the stronger engine (Beginner ~1190 / Intermediate ~1520 / Advanced
   ~1660, measured vs Stockfish).
+- [x] **More search speed**: late move reductions (search late-ordered quiet moves shallower, verify
+  if they beat alpha), aspiration windows (search each iterative-deepening depth in a narrow window
+  around the previous score, re-search only on a fail; about 44% fewer nodes at depth 7+), incremental
+  Zobrist (update the hash by XOR in make/unmake instead of rescanning the board every node), and
+  magic bitboards (slider attacks by a single perfect-hash table lookup instead of a ray scan). Each
+  is toggle-guarded and proven exact (unchanged perft, or a node-count / differential test).
 - [x] **Evaluation v2**: on top of material + piece-square tables, the engine now scores mobility
-  (how many squares each piece reaches), the bishop pair, and doubled/isolated pawns, so it plays
-  more purposeful, developing chess rather than only counting material.
+  (how many squares each piece reaches), the bishop pair, doubled/isolated pawns, and king safety
+  (a pawn shield in front of the castled king), so it plays more purposeful, developing chess rather
+  than only counting material.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
@@ -86,6 +93,8 @@ Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI sea
   movable board; your move is graded live by Stockfish (any non-losing move solves it).
 - [x] **C4. Polish** — import games by username from Lichess and Chess.com, an eval bar
   beside the board, remembered sessions (localStorage), and under-promotion in drills.
+- [x] **C5. Eval graph** — a chess.com-style evaluation graph across the game with blunder
+  markers and the engine's best line at each point.
 
 ## Build
 
