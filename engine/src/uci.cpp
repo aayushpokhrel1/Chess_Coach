@@ -2,6 +2,7 @@
 #include "movegen.hpp"
 #include "types.hpp"
 #include "search.hpp"
+#include "eval.hpp"
 #include <sstream>
 #include <vector>
 #include <cstdlib>
@@ -131,6 +132,18 @@ std::string handle_command(UciState& state, const std::string& line) {
         return "id name ChessCoach\nid author Aayush Pokhrel\nuciok";
     if (cmd == "isready")
         return "readyok";
+    if (cmd == "setoption") {
+        // setoption name <Weight> value <int>: retune an eval weight for A/B tuning.
+        // Weight names are the eval_set_weight set; unknown names are silently ignored.
+        std::string name;
+        int value = 0; bool have_value = false;
+        for (size_t i = 1; i + 1 < tok.size(); i++) {
+            if (tok[i] == "name")  name  = tok[i + 1];
+            if (tok[i] == "value") { value = std::atoi(tok[i + 1].c_str()); have_value = true; }
+        }
+        if (have_value) eval_set_weight(name, value);
+        return "";
+    }
     if (cmd == "ucinewgame") {
         state.board = start_position();
         return "";

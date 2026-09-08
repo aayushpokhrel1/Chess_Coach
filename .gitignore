@@ -20,3 +20,4 @@ Thumbs.db
 
 # Session handover (local-only, this machine)
 HANDOVER.md
+engine/build-release/

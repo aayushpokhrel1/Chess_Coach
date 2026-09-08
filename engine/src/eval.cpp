@@ -2,13 +2,18 @@
 #include "bitboard.hpp"
 
 namespace {
-// Eval v2 weights. These are tuning knobs, not laws: rough hand-set values that a
-// gauntlet can refine later. Mobility is per reachable square, lower for sliders so
-// their many squares do not swamp material.
-const int MOB_KNIGHT = 4, MOB_BISHOP = 4, MOB_ROOK = 2, MOB_QUEEN = 1;
-const int BISHOP_PAIR = 30;
-const int DOUBLED = 15;    // penalty per extra pawn stacked on a file
-const int ISOLATED = 15;   // penalty per pawn with no friendly pawn on an adjacent file
+// Eval v2 weights. Tuning knobs, not laws: hand-set defaults a gauntlet can refine.
+// Mutable (not const) so A/B self-play can retune them at runtime via eval_set_weight;
+// the defaults below are the original hand-set values, so eval is unchanged until set.
+// Mobility is per reachable square, lower for sliders so their squares do not swamp material.
+struct EvalWeights {
+    int mob_knight = 4, mob_bishop = 4, mob_rook = 2, mob_queen = 1;
+    int bishop_pair = 30;
+    int doubled = 15;    // penalty per extra pawn stacked on a file
+    int isolated = 15;   // penalty per pawn with no friendly pawn on an adjacent file
+    int shield = 12;     // penalty per file in front of the king with no pawn cover
+};
+EvalWeights W;
 
 const uint64_t FILE_A_BB = 0x0101010101010101ULL;
 inline uint64_t file_mask(int f) { return FILE_A_BB << f; }
@@ -19,10 +24,10 @@ int mobility_side(const Board& b, Color c) {
     uint64_t own = b.occ[ci];
     int m = 0, s;
     uint64_t bb;
-    bb = b.bb[ci][1]; while (bb) { s = pop_lsb(bb); m += MOB_KNIGHT * popcount(knight_attacks(s) & ~own); }
-    bb = b.bb[ci][2]; while (bb) { s = pop_lsb(bb); m += MOB_BISHOP * popcount(bishop_attacks(s, b.occ_all) & ~own); }
-    bb = b.bb[ci][3]; while (bb) { s = pop_lsb(bb); m += MOB_ROOK   * popcount(rook_attacks(s, b.occ_all) & ~own); }
-    bb = b.bb[ci][4]; while (bb) { s = pop_lsb(bb); m += MOB_QUEEN  * popcount(queen_attacks(s, b.occ_all) & ~own); }
+    bb = b.bb[ci][1]; while (bb) { s = pop_lsb(bb); m += W.mob_knight * popcount(knight_attacks(s) & ~own); }
+    bb = b.bb[ci][2]; while (bb) { s = pop_lsb(bb); m += W.mob_bishop * popcount(bishop_attacks(s, b.occ_all) & ~own); }
+    bb = b.bb[ci][3]; while (bb) { s = pop_lsb(bb); m += W.mob_rook   * popcount(rook_attacks(s, b.occ_all) & ~own); }
+    bb = b.bb[ci][4]; while (bb) { s = pop_lsb(bb); m += W.mob_queen  * popcount(queen_attacks(s, b.occ_all) & ~own); }
     return m;
 }
 
@@ -33,18 +38,16 @@ int pawn_penalty(const Board& b, Color c) {
     for (int f = 0; f < 8; f++) {
         int cnt = popcount(pawns & file_mask(f));
         if (cnt == 0) continue;
-        if (cnt > 1) pen += DOUBLED * (cnt - 1);
+        if (cnt > 1) pen += W.doubled * (cnt - 1);
         uint64_t adj = (f > 0 ? file_mask(f - 1) : 0) | (f < 7 ? file_mask(f + 1) : 0);
-        if (!(pawns & adj)) pen += ISOLATED * cnt;   // no friendly pawn beside this file
+        if (!(pawns & adj)) pen += W.isolated * cnt;   // no friendly pawn beside this file
     }
     return pen;
 }
 
 int bishop_pair(const Board& b, Color c) {
-    return popcount(b.bb[static_cast<int>(c)][2]) >= 2 ? BISHOP_PAIR : 0;
+    return popcount(b.bb[static_cast<int>(c)][2]) >= 2 ? W.bishop_pair : 0;
 }
-
-const int SHIELD = 12;   // penalty per file in front of the king with no pawn cover
 
 // King safety: penalize a king whose pawn shield (the three files in front of it) has
 // gaps. Only while the enemy still has a queen: in the queenless endgame the king should
@@ -67,7 +70,7 @@ int king_safety_side(const Board& b, Color c) {
             if (r >= 0 && r < 8 && bb_get(pawns, make_square(f, r))) { covered++; break; }
         }
     }
-    return -SHIELD * (3 - covered);
+    return -W.shield * (3 - covered);
 }
 // Michniewski "Simplified Evaluation Function" tables, White's perspective,
 // printed rank 8 first, so index 0 = a8, index 63 = h1.
@@ -159,6 +162,19 @@ int pst_score(const Board& b) {
     return score;
 }
 } // namespace
+
+bool eval_set_weight(const std::string& name, int value) {
+    if      (name == "MobKnight")  W.mob_knight = value;
+    else if (name == "MobBishop")  W.mob_bishop = value;
+    else if (name == "MobRook")    W.mob_rook   = value;
+    else if (name == "MobQueen")   W.mob_queen  = value;
+    else if (name == "BishopPair") W.bishop_pair = value;
+    else if (name == "Doubled")    W.doubled    = value;
+    else if (name == "Isolated")   W.isolated   = value;
+    else if (name == "Shield")     W.shield     = value;
+    else return false;
+    return true;
+}
 
 int piece_value(PieceType t) {
     switch (t) {
