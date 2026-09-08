@@ -19,6 +19,7 @@ bool g_use_tt = true;         // transposition table on? (tests toggle it off to
 bool g_use_order_heur = true; // killer + history quiet-move ordering on? (tests toggle it)
 bool g_use_null = true;       // null-move pruning on? (a heuristic; tests toggle it off)
 bool g_use_lmr = true;        // late move reductions on? (a heuristic; tests toggle it off)
+bool g_use_aspiration = true; // aspiration windows on? (only reorders/prunes; value stays exact)
 bool g_timed = false;         // is the current search time-limited?
 bool g_can_stop = false;      // may we abort the current depth? (false during depth 1)
 bool g_stop = false;          // set true once the deadline has passed
@@ -307,27 +308,12 @@ int negamax_full(Board& b, int depth, int ply) {
     }
     return best;
 }
-} // namespace
 
-long nodes_searched() { return g_nodes; }
-
-void search_use_tt(bool on) { g_use_tt = on; }
-
-void search_use_order_heur(bool on) { g_use_order_heur = on; }
-
-void search_use_null(bool on) { g_use_null = on; }
-
-void search_use_lmr(bool on) { g_use_lmr = on; }
-
-int search_minimax(Board& b, int depth) {
-    g_nodes = 0;
-    g_timed = false;
-    g_stop = false;
-    return negamax_full(b, depth, 0);
-}
-
-SearchResult search_to_depth(Board& b, int depth, Move first) {
-    g_nodes = 0;
+// One fixed-depth search of the root moves inside an explicit [alpha, beta] window.
+// With the full window (-INF, INF) this is the plain root search (the fail-high break
+// below never fires); a narrow window lets aspiration search prune harder at the root.
+// Does NOT reset g_nodes: the caller owns that, so an aspiration re-search accumulates.
+SearchResult root_search(Board& b, int depth, Move first, int window_alpha, int window_beta) {
     SearchResult result;
     result.best = Move{};
     result.score = 0;
@@ -348,10 +334,10 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
     }
 
     int best = -INF;
-    int alpha = -INF;
+    int alpha = window_alpha;
     for (const Move& m : moves) {
         Undo u = make_move(b, m);
-        int score = -negamax(b, depth - 1, 1, -INF, -alpha);
+        int score = -negamax(b, depth - 1, 1, -window_beta, -alpha);
         unmake_move(b, m, u);
         if (g_stop) break;   // depth incomplete; caller discards this result
         if (score > best) {
@@ -363,10 +349,60 @@ SearchResult search_to_depth(Board& b, int depth, Move first) {
                 result.pv.push_back(g_pv[1][i]);
         }
         if (best > alpha) alpha = best;
+        if (alpha >= window_beta) break;   // fail-high: the true score is above the window
     }
     result.score = best;
     result.depth = depth;
     return result;
+}
+
+// One iterative-deepening step with an aspiration window around the previous depth's
+// score. Alpha-beta prunes hardest with a tight window, and consecutive depths score
+// close, so we bet the true score lands within +-delta of last time. On a miss the
+// search fails high (>= beta) or low (<= alpha) and hands back only a bound, so we
+// re-search opening only the failing side to infinity. That side then cannot fail
+// again and the other side already held, so a completed step is exact: same score as
+// a full-window search, only fewer nodes. (With the toggle off, just a full window.)
+SearchResult aspiration_search(Board& b, int depth, Move first, int prev_score) {
+    g_nodes = 0;   // this depth's node count starts here and spans any re-search
+    if (!g_use_aspiration)
+        return root_search(b, depth, first, -INF, INF);
+
+    const int delta = 25;   // centipawns; the guessed swing between depths
+    int alpha = prev_score - delta;
+    int beta  = prev_score + delta;
+    SearchResult r = root_search(b, depth, first, alpha, beta);
+    if (g_stop) return r;
+    if (r.score <= alpha)        // fail low: real score is below the window, drop the floor
+        r = root_search(b, depth, first, -INF, beta);
+    else if (r.score >= beta)    // fail high: real score is above the window, raise the ceiling
+        r = root_search(b, depth, first, alpha, INF);
+    return r;
+}
+} // namespace
+
+long nodes_searched() { return g_nodes; }
+
+void search_use_tt(bool on) { g_use_tt = on; }
+
+void search_use_order_heur(bool on) { g_use_order_heur = on; }
+
+void search_use_null(bool on) { g_use_null = on; }
+
+void search_use_lmr(bool on) { g_use_lmr = on; }
+
+void search_use_aspiration(bool on) { g_use_aspiration = on; }
+
+int search_minimax(Board& b, int depth) {
+    g_nodes = 0;
+    g_timed = false;
+    g_stop = false;
+    return negamax_full(b, depth, 0);
+}
+
+SearchResult search_to_depth(Board& b, int depth, Move first) {
+    g_nodes = 0;   // fixed-depth entry point: reset the counter for this one search
+    return root_search(b, depth, first, -INF, INF);   // full window (the test oracle)
 }
 
 SearchResult search(Board& b, int max_depth) {
@@ -378,7 +414,9 @@ SearchResult search(Board& b, int max_depth) {
     result.best = Move{};
     result.score = 0;
     for (int d = 1; d <= max_depth; d++) {
-        result = search_to_depth(b, d, result.best);
+        // Depth 1 has no previous score to aspire to, so it runs full-window.
+        result = (d == 1) ? search_to_depth(b, d, result.best)
+                          : aspiration_search(b, d, result.best, result.score);
     }
     return result;
 }
@@ -397,7 +435,8 @@ SearchResult search_timed(Board& b, const SearchLimits& limits) {
     for (int d = 1; d <= limits.max_depth; d++) {
         g_can_stop = (d > 1);       // always finish depth 1 so we return a legal move
         g_check_counter = 0;
-        SearchResult r = search_to_depth(b, d, best.best);
+        SearchResult r = (d == 1) ? search_to_depth(b, d, best.best)
+                                  : aspiration_search(b, d, best.best, best.score);
         if (g_stop) break;          // depth d aborted: keep the depth d-1 result
         best = r;
         if (best.best.from == NO_SQUARE) break;                  // no legal move at root

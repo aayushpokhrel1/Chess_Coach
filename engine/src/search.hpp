@@ -36,6 +36,11 @@ void search_use_null(bool on);
 // change the value, so an exact-equality test disables it too. Enabled by default.
 void search_use_lmr(bool on);
 
+// Exposed for tests: turn aspiration windows off/on. A completed aspiration search
+// returns the exact full-window value (the fail-high/low re-search guarantees it),
+// so it only cuts node count, never the score. Enabled by default.
+void search_use_aspiration(bool on);
+
 // One fixed-depth alpha-beta search. If `first` is a real move (from != NO_SQUARE)
 // it is searched first at the root; the iterative-deepening driver passes the
 // previous iteration's best move here to improve ordering.

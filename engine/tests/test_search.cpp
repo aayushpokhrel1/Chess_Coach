@@ -134,6 +134,40 @@ TEST_CASE("late move reductions cut nodes at a fixed depth") {
     CHECK(with < without);   // reducing late quiet moves visits fewer nodes
 }
 
+TEST_CASE("aspiration windows cut nodes at a fixed depth") {
+    // A Ruy Lopez (1.e4 e5 2.Nf3 Nc6 3.Bb5), busy enough that the deeper search has
+    // real work to prune. Everything else stays on: aspiration's win is a tighter root
+    // window on top of the rest, so the only variable is the window.
+    //
+    // Depth matters here. At shallow depth the iterative-deepening TT is already warm,
+    // so a full-window final search is cheap and the occasional window re-search costs
+    // more than it saves. Aspiration's payoff shows from depth 7 on (the regime real
+    // games actually search in), where the narrow window prunes the big trees hard.
+    Board b = board_from_fen("r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1");
+
+    search_use_aspiration(false);
+    search(b, 7);
+    long without = nodes_searched();
+
+    search_use_aspiration(true);
+    search(b, 7);
+    long with = nodes_searched();
+
+    CHECK(with < without);   // the narrow window around the previous score prunes more
+}
+
+TEST_CASE("aspiration windows do not change the search value") {
+    // The re-search-on-fail must make a completed aspiration search exact. Compare the
+    // aspirated iterative deepening to a full-window fixed-depth search at the same depth.
+    Board b = board_from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+    search_use_aspiration(true);
+    int aspirated = search(b, 5).score;
+    search_use_aspiration(false);
+    int full = search(b, 5).score;
+    search_use_aspiration(true);
+    CHECK(aspirated == full);
+}
+
 TEST_CASE("search returns a principal variation starting with the best move") {
     Board b = board_from_fen("4k3/8/8/8/8/3q4/8/3RK3 w - - 0 1"); // Rd1xd3 wins the queen
     SearchResult r = search(b, 3);
