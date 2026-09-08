@@ -21,6 +21,13 @@ bool init_tables() {
 const bool z_ready = init_tables();  // runs before main()
 }
 
+uint64_t zobrist_piece(Color c, PieceType t, Square s) {
+    return Z_PIECE[static_cast<int>(c) * 6 + static_cast<int>(t)][s];
+}
+uint64_t zobrist_side()                { return Z_SIDE; }
+uint64_t zobrist_castle_bit(int i)     { return Z_CASTLE[i]; }
+uint64_t zobrist_ep_file(int file)     { return Z_EP[file]; }
+
 uint64_t compute_hash(const Board& b) {
     uint64_t h = 0;
     for (Square sq = 0; sq < 64; sq++) {

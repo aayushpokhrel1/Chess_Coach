@@ -18,6 +18,7 @@ struct Undo {
     Square en_passant = NO_SQUARE;
     int halfmove_clock = 0;
     int fullmove_number = 1;
+    uint64_t hash = 0;   // the position's Zobrist key before the move; unmake restores it
 };
 
 std::string to_uci(const Move& m);

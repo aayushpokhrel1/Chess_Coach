@@ -187,7 +187,7 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
     // Transposition table probe. If we have searched this exact position at least
     // this deep and the stored bound settles the current [alpha, beta] window, reuse
     // it. Even a too-shallow hit hands back the move that was best here, for ordering.
-    const uint64_t key = compute_hash(b);
+    const uint64_t key = b.hash;   // incremental key, kept in step by make/unmake
     Move tt_move{};
     if (g_use_tt) {
         int tt_score;
@@ -215,11 +215,17 @@ int negamax(Board& b, int depth, int ply, int alpha, int beta, bool can_null = t
         const int R = 2;   // reduce the pass search by this many plies
         Color saved_side = b.side_to_move;
         Square saved_ep = b.en_passant;
+        uint64_t saved_hash = b.hash;
         b.side_to_move = (saved_side == Color::White) ? Color::Black : Color::White;
         b.en_passant = NO_SQUARE;   // a pass clears any en-passant right
+        // Keep b.hash honest for the child's TT probe: flip the side term and clear
+        // any en-passant term, mirroring the two fields we just changed by hand.
+        b.hash ^= zobrist_side();
+        if (saved_ep != NO_SQUARE) b.hash ^= zobrist_ep_file(file_of(saved_ep));
         int null_score = -negamax(b, depth - 1 - R, ply + 1, -beta, -beta + 1, false);
         b.side_to_move = saved_side;
         b.en_passant = saved_ep;
+        b.hash = saved_hash;   // restore (covers both the side and ep terms above)
         if (g_stop) return 0;                   // aborted: value discarded upstream
         if (null_score >= beta) return beta;    // fail-high: prune this node
     }

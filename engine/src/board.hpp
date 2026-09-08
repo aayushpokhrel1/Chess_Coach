@@ -24,6 +24,11 @@ struct Board {
     uint64_t bb[2][6] = {};
     uint64_t occ[2] = {};
     uint64_t occ_all = 0;
+
+    // Zobrist key of this position. Set once from compute_hash by the FEN parser,
+    // then kept in step incrementally by make_move / unmake_move (XOR in the terms
+    // that change). The search reads this instead of rescanning the board per node.
+    uint64_t hash = 0;
 };
 
 Board board_from_fen(const std::string& fen);

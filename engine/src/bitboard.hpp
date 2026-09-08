@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "board.hpp"
 #include "types.hpp"
+#include "zobrist.hpp"
 
 // Bitboard primitives. A bitboard is a uint64_t with one bit per square, bit
 // index == square (a1=0, h8=63), so squares are set operations: union is |,
@@ -29,6 +30,7 @@ inline void add_piece(Board& b, Square s, Piece p) {
     bb_set(b.bb[c][t], s);
     bb_set(b.occ[c], s);
     bb_set(b.occ_all, s);
+    b.hash ^= zobrist_piece(p.color, p.type, s);   // toggle this piece-square term
 }
 inline void remove_piece(Board& b, Square s) {
     Piece p = b.squares[s];
@@ -36,6 +38,7 @@ inline void remove_piece(Board& b, Square s) {
     bb_clear(b.bb[c][t], s);
     bb_clear(b.occ[c], s);
     bb_clear(b.occ_all, s);
+    b.hash ^= zobrist_piece(p.color, p.type, s);   // toggle it back off
     b.squares[s] = Piece{Color::None, PieceType::None};
 }
 inline void move_piece(Board& b, Square from, Square to) {

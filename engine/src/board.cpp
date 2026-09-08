@@ -37,6 +37,7 @@ Board board_from_fen(const std::string& fen) {
     b.halfmove_clock = halfmove;
     b.fullmove_number = fullmove;
     bb_rebuild(b);   // squares[] is filled; derive the bitboard view once
+    b.hash = compute_hash(b);   // seed the incremental key; make/unmake keep it in step
     return b;
 }
 

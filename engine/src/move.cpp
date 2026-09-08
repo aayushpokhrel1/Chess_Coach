@@ -26,6 +26,7 @@ Undo make_move(Board& b, const Move& m) {
     u.en_passant = b.en_passant;
     u.halfmove_clock = b.halfmove_clock;
     u.fullmove_number = b.fullmove_number;
+    u.hash = b.hash;   // pre-move key; unmake restores it, so unmake can never drift
 
     bool capture = b.squares[m.to].type != PieceType::None
                 || m.flag == MoveFlag::EnPassant;
@@ -80,6 +81,17 @@ Undo make_move(Board& b, const Move& m) {
     strip(m.from);
     strip(m.to);
 
+    // Incremental hash, non-piece terms. The piece-square terms were already XORed
+    // inside the move helpers (add/remove/move_piece); here we fold in what they do
+    // not touch: the side flip, any castling-right bits just stripped, and the
+    // en-passant file leaving/arriving. compute_hash stays the oracle the test checks.
+    b.hash ^= zobrist_side();
+    int cast_changed = u.castling_rights ^ b.castling_rights;
+    for (int i = 0; i < 4; i++)
+        if (cast_changed & (1 << i)) b.hash ^= zobrist_castle_bit(i);
+    if (u.en_passant != NO_SQUARE) b.hash ^= zobrist_ep_file(file_of(u.en_passant));
+    if (b.en_passant != NO_SQUARE) b.hash ^= zobrist_ep_file(file_of(b.en_passant));
+
     b.halfmove_clock = (capture || pawn_move) ? 0 : b.halfmove_clock + 1;
     if (us == Color::Black) b.fullmove_number += 1;
     b.side_to_move = them;
@@ -123,4 +135,9 @@ void unmake_move(Board& b, const Move& m, const Undo& u) {
         else                             // rook d -> a
             move_piece(b, make_square(3, r), make_square(0, r));
     }
+
+    // The move helpers above re-toggled the piece terms as they moved pieces back,
+    // but the exact old key (piece + side + castling + ep) is already saved, so just
+    // restore it. This is why unmake cannot drift out of step with compute_hash.
+    b.hash = u.hash;
 }
