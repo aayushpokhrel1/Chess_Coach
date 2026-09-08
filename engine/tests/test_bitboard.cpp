@@ -3,6 +3,7 @@
 #include "bitboard.hpp"
 #include "move.hpp"
 #include "movegen.hpp"
+#include <random>
 
 static int square_count(const Board& b) {
     int n = 0;
@@ -24,7 +25,27 @@ TEST_CASE("bitboards match squares[] after FEN parse") {
     }
 }
 
-TEST_CASE("classical-ray slider and leaper attacks") {
+TEST_CASE("magic slider lookup matches the ray-scan reference") {
+    // The whole point of magics: the table lookup must return exactly what the old
+    // ray scan did, for every square and every blocker layout. Check all 64 squares
+    // against a spread of occupancies (empty, full, and pseudo-random), so any bad
+    // magic, mask, or index shows up here rather than as a subtle perft miscount.
+    std::mt19937_64 rng(0x1234ABCDULL);
+    for (Square s = 0; s < 64; s++) {
+        CHECK(rook_attacks(s, 0) == rook_attacks_ref(s, 0));
+        CHECK(bishop_attacks(s, 0) == bishop_attacks_ref(s, 0));
+        uint64_t full = ~0ULL;
+        CHECK(rook_attacks(s, full) == rook_attacks_ref(s, full));
+        CHECK(bishop_attacks(s, full) == bishop_attacks_ref(s, full));
+        for (int t = 0; t < 200; t++) {
+            uint64_t occ = rng() & rng();   // sparse-ish random boards
+            CHECK(rook_attacks(s, occ) == rook_attacks_ref(s, occ));
+            CHECK(bishop_attacks(s, occ) == bishop_attacks_ref(s, occ));
+        }
+    }
+}
+
+TEST_CASE("slider and leaper attacks") {
     // Rook on a1, empty board: whole a-file + rank 1 = 14 squares.
     CHECK(popcount(rook_attacks(make_square(0, 0), 0)) == 14);
 

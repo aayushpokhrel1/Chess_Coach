@@ -57,6 +57,11 @@ uint64_t bishop_attacks(Square s, uint64_t occ);
 uint64_t rook_attacks(Square s, uint64_t occ);
 uint64_t queen_attacks(Square s, uint64_t occ);
 
+// Reference slider attacks by ray-scan (the pre-magic implementation). Kept as the
+// oracle a differential test checks the magic lookup against; not on the hot path.
+uint64_t rook_attacks_ref(Square s, uint64_t occ);
+uint64_t bishop_attacks_ref(Square s, uint64_t occ);
+
 // Fill bb/occ/occ_all from squares[] (the FEN parser calls this once).
 void bb_rebuild(Board& b);
 
