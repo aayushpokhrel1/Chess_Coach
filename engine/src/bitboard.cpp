@@ -127,7 +127,10 @@ uint64_t find_magic(Square s, bool rook, uint64_t* table, std::mt19937_64& rng) 
     uint64_t mask = slider_mask(s, rook);
     int bits = popcount(mask);
     int n = 1 << bits;
-    uint64_t occs[4096], atts[4096];
+    // static, not on the stack: two 4096-entry arrays are 64KB, which overflows the
+    // WASM default stack during static-init. init runs these calls one at a time and
+    // rewrites [0, n) fully before reading, so reuse across calls is safe.
+    static uint64_t occs[4096], atts[4096];
     for (int i = 0; i < n; i++) {
         occs[i] = occupancy_for(i, mask);
         atts[i] = rook ? rook_ref(s, occs[i]) : bishop_ref(s, occs[i]);
