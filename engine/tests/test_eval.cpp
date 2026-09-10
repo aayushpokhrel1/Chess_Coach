@@ -66,6 +66,36 @@ TEST_CASE("v2 penalizes doubled and isolated pawns") {
     CHECK(positional_eval(b) < 0);
 }
 
+TEST_CASE("v2 rewards a passed pawn") {
+    // White pawn on e6, no black pawns: a passed pawn. Toggling the passed-pawn weight
+    // off must lower White's positional score, which isolates exactly this term.
+    Board b = board_from_fen("4k3/8/4P3/8/8/8/8/4K3 w - - 0 1");
+    int with_term = positional_eval(b);
+    eval_set_weight("Passed", 0);
+    int without = positional_eval(b);
+    eval_set_weight("Passed", 12);   // restore the default for later tests
+    CHECK(with_term > without);
+}
+
+TEST_CASE("a more advanced passed pawn is worth more") {
+    // Both are passers (no black pawns); positional_eval excludes the PST, so the only
+    // difference is how far each has advanced.
+    Board near = board_from_fen("4k3/4P3/8/8/8/8/8/4K3 w - - 0 1"); // e7 (7th rank)
+    Board far  = board_from_fen("4k3/8/8/8/4P3/8/8/4K3 w - - 0 1"); // e4 (4th rank)
+    CHECK(positional_eval(near) > positional_eval(far));
+}
+
+TEST_CASE("v2 gives no passed bonus when an enemy pawn blocks the file") {
+    // White e6 pawn, but a black d7 pawn covers the passer's path on the adjacent file:
+    // neither side has a passer, so toggling the passed weight changes nothing.
+    Board b = board_from_fen("4k3/3p4/4P3/8/8/8/8/4K3 w - - 0 1");
+    int with_term = positional_eval(b);
+    eval_set_weight("Passed", 0);
+    int without = positional_eval(b);
+    eval_set_weight("Passed", 12);
+    CHECK(with_term == without);
+}
+
 TEST_CASE("v2 king safety penalizes an exposed king, but only with enemy queens on") {
     // White king on g1 with NO pawn cover; Black king on g8 behind f7/g7/h7. Queens on.
     Board exposed = board_from_fen("3q2k1/5ppp/8/8/8/8/8/3Q2K1 w - - 0 1");

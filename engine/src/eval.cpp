@@ -12,6 +12,7 @@ struct EvalWeights {
     int doubled = 15;    // penalty per extra pawn stacked on a file
     int isolated = 15;   // penalty per pawn with no friendly pawn on an adjacent file
     int shield = 12;     // penalty per file in front of the king with no pawn cover
+    int passed = 12;     // passed-pawn bonus per rank advanced (0 disables the term)
 };
 EvalWeights W;
 
@@ -71,6 +72,33 @@ int king_safety_side(const Board& b, Color c) {
         }
     }
     return -W.shield * (3 - covered);
+}
+
+// Passed pawns: a pawn with no enemy pawn on its own or the two adjacent files anywhere
+// ahead of it (nothing can be traded off or blockaded to stop it). The bonus grows with
+// how far it has advanced toward promotion, since a passer on the 7th is far more
+// dangerous than one on the 3rd. Cheap per pawn: intersect a 3-file mask with an
+// "everything ahead" half-board mask and check no enemy pawn sits there.
+int passed_pawns(const Board& b, Color c) {
+    int ci = static_cast<int>(c);
+    uint64_t pawns = b.bb[ci][0];
+    uint64_t enemy = b.bb[1 - ci][0];
+    bool white = (c == Color::White);
+    int bonus = 0;
+    while (pawns) {
+        int s = pop_lsb(pawns);
+        int f = file_of(s), r = rank_of(s);
+        uint64_t files3 = file_mask(f)
+            | (f > 0 ? file_mask(f - 1) : 0)
+            | (f < 7 ? file_mask(f + 1) : 0);
+        // Every square on a rank strictly beyond r toward promotion (up for White,
+        // down for Black), expressed as a half-board bitmask.
+        uint64_t ahead = white ? (r < 7 ? (~0ULL << ((r + 1) * 8)) : 0ULL)
+                               : (r > 0 ? ((1ULL << (r * 8)) - 1)   : 0ULL);
+        if ((enemy & files3 & ahead) == 0)
+            bonus += W.passed * (white ? r : 7 - r);   // r / 7-r = ranks advanced
+    }
+    return bonus;
 }
 // Michniewski "Simplified Evaluation Function" tables, White's perspective,
 // printed rank 8 first, so index 0 = a8, index 63 = h1.
@@ -172,6 +200,7 @@ bool eval_set_weight(const std::string& name, int value) {
     else if (name == "Doubled")    W.doubled    = value;
     else if (name == "Isolated")   W.isolated   = value;
     else if (name == "Shield")     W.shield     = value;
+    else if (name == "Passed")     W.passed     = value;
     else return false;
     return true;
 }
@@ -204,6 +233,7 @@ int positional_eval(const Board& b) {
     s += bishop_pair(b, Color::White)   - bishop_pair(b, Color::Black);
     s -= pawn_penalty(b, Color::White)  - pawn_penalty(b, Color::Black); // penalties hurt their side
     s += king_safety_side(b, Color::White) - king_safety_side(b, Color::Black); // each is <=0
+    s += passed_pawns(b, Color::White) - passed_pawns(b, Color::Black);         // each is >=0
     return s;
 }
 
