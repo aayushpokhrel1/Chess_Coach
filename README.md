@@ -76,9 +76,11 @@ Engine milestones (correctness before speed):
   magic bitboards (slider attacks by a single perfect-hash table lookup instead of a ray scan). Each
   is toggle-guarded and proven exact (unchanged perft, or a node-count / differential test).
 - [x] **Evaluation v2**: on top of material + piece-square tables, the engine now scores mobility
-  (how many squares each piece reaches), the bishop pair, doubled/isolated pawns, and king safety
-  (a pawn shield in front of the castled king), so it plays more purposeful, developing chess rather
-  than only counting material.
+  (how many squares each piece reaches), the bishop pair, doubled/isolated pawns, king safety
+  (a pawn shield in front of the castled king), and passed pawns (a pawn nothing can stop from
+  promoting, worth more the further it has advanced), so it plays more purposeful, developing chess
+  rather than only counting material. The weights are tuned and validated by A/B self-play
+  (`web/scripts/ab.mjs`): the passed-pawn term measured +31 Elo (LOS 96%) over its absence.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
