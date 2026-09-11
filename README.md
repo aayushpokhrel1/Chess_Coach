@@ -77,10 +77,12 @@ Engine milestones (correctness before speed):
   is toggle-guarded and proven exact (unchanged perft, or a node-count / differential test).
 - [x] **Evaluation v2**: on top of material + piece-square tables, the engine now scores mobility
   (how many squares each piece reaches), the bishop pair, doubled/isolated pawns, king safety
-  (a pawn shield in front of the castled king), and passed pawns (a pawn nothing can stop from
-  promoting, worth more the further it has advanced), so it plays more purposeful, developing chess
-  rather than only counting material. The weights are tuned and validated by A/B self-play
-  (`web/scripts/ab.mjs`): the passed-pawn term measured +31 Elo (LOS 96%) over its absence.
+  (a pawn shield in front of the castled king), passed pawns (a pawn nothing can stop from
+  promoting, worth more the further it has advanced), and rooks on open / half-open files, so it
+  plays more purposeful, developing chess rather than only counting material. Terms are validated by
+  A/B self-play (`web/scripts/ab.mjs`) before they ship: passed pawns measured +31 Elo (LOS 96%) and
+  open files +24 Elo (LOS 98%) over their absence, while a knight-outpost term was tried and dropped
+  when it failed to show a confident gain (a strict outpost is too rare to move the needle).
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
