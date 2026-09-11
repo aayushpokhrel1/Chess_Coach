@@ -96,6 +96,37 @@ TEST_CASE("v2 gives no passed bonus when an enemy pawn blocks the file") {
     CHECK(with_term == without);
 }
 
+// The rook-file term's contribution alone: full score minus the score with both
+// rook-file weights zeroed, so every other term cancels.
+static int rook_file_contrib(Board& b) {
+    int on = positional_eval(b);
+    eval_set_weight("RookOpen", 0);
+    eval_set_weight("RookHalf", 0);
+    int off = positional_eval(b);
+    eval_set_weight("RookOpen", 20);   // restore defaults
+    eval_set_weight("RookHalf", 10);
+    return on - off;
+}
+
+TEST_CASE("v2 rewards a rook on an open file") {
+    // White rook on e1, no pawns anywhere: the e-file is fully open.
+    Board b = board_from_fen("4k3/8/8/8/8/8/8/4RK2 w - - 0 1");
+    CHECK(rook_file_contrib(b) == 20);   // the full open-file bonus
+}
+
+TEST_CASE("an open file is worth more to a rook than a half-open file") {
+    Board open = board_from_fen("4k3/8/8/8/8/8/8/4RK2 w - - 0 1");   // e-file fully open
+    Board half = board_from_fen("4k3/4p3/8/8/8/8/8/4RK2 w - - 0 1"); // black e7 pawn: half-open
+    CHECK(rook_file_contrib(open) > rook_file_contrib(half));         // 20 vs 10
+    CHECK(rook_file_contrib(half) == 10);
+}
+
+TEST_CASE("no rook-file bonus when a friendly pawn blocks the file") {
+    // White rook e1 but a white e2 pawn sits on the same file: the rook is blocked.
+    Board b = board_from_fen("4k3/8/8/8/8/8/4P3/4RK2 w - - 0 1");
+    CHECK(rook_file_contrib(b) == 0);
+}
+
 TEST_CASE("v2 king safety penalizes an exposed king, but only with enemy queens on") {
     // White king on g1 with NO pawn cover; Black king on g8 behind f7/g7/h7. Queens on.
     Board exposed = board_from_fen("3q2k1/5ppp/8/8/8/8/8/3Q2K1 w - - 0 1");

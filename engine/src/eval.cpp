@@ -13,6 +13,8 @@ struct EvalWeights {
     int isolated = 15;   // penalty per pawn with no friendly pawn on an adjacent file
     int shield = 12;     // penalty per file in front of the king with no pawn cover
     int passed = 12;     // passed-pawn bonus per rank advanced (0 disables the term)
+    int rook_open = 20;  // bonus for a rook on a fully open file (no pawns either side)
+    int rook_half = 10;  // bonus for a rook on a half-open file (no friendly pawns)
 };
 EvalWeights W;
 
@@ -97,6 +99,24 @@ int passed_pawns(const Board& b, Color c) {
                                : (r > 0 ? ((1ULL << (r * 8)) - 1)   : 0ULL);
         if ((enemy & files3 & ahead) == 0)
             bonus += W.passed * (white ? r : 7 - r);   // r / 7-r = ranks advanced
+    }
+    return bonus;
+}
+
+// Rooks on open / half-open files. A file with no friendly pawn lets the rook work down
+// it; with no pawns at all (open) it rakes the whole file, so that scores more than a
+// half-open file (only enemy pawns). A friendly pawn on the file blocks the rook: nothing.
+int rook_files(const Board& b, Color c) {
+    int ci = static_cast<int>(c);
+    uint64_t rooks = b.bb[ci][static_cast<int>(PieceType::Rook)];
+    uint64_t own_pawns = b.bb[ci][0];
+    uint64_t enemy_pawns = b.bb[1 - ci][0];
+    int bonus = 0;
+    while (rooks) {
+        int s = pop_lsb(rooks);
+        uint64_t fm = file_mask(file_of(s));
+        if (!(own_pawns & fm))                                     // no friendly pawn blocking
+            bonus += (enemy_pawns & fm) ? W.rook_half : W.rook_open; // enemy pawn = half-open
     }
     return bonus;
 }
@@ -201,6 +221,8 @@ bool eval_set_weight(const std::string& name, int value) {
     else if (name == "Isolated")   W.isolated   = value;
     else if (name == "Shield")     W.shield     = value;
     else if (name == "Passed")     W.passed     = value;
+    else if (name == "RookOpen")   W.rook_open  = value;
+    else if (name == "RookHalf")   W.rook_half  = value;
     else return false;
     return true;
 }
@@ -234,6 +256,7 @@ int positional_eval(const Board& b) {
     s -= pawn_penalty(b, Color::White)  - pawn_penalty(b, Color::Black); // penalties hurt their side
     s += king_safety_side(b, Color::White) - king_safety_side(b, Color::Black); // each is <=0
     s += passed_pawns(b, Color::White) - passed_pawns(b, Color::Black);         // each is >=0
+    s += rook_files(b, Color::White) - rook_files(b, Color::Black);             // each is >=0
     return s;
 }
 
