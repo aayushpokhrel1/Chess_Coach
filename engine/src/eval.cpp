@@ -16,6 +16,7 @@ struct EvalWeights {
     int rook_open = 20;  // bonus for a rook on a fully open file (no pawns either side)
     int rook_half = 10;  // bonus for a rook on a half-open file (no friendly pawns)
     int phase_king = 1;  // 1 = blend the king PST between middlegame and endgame by phase; 0 = off
+    int phase_pieces = 1;// 1 = blend the other pieces' PSTs by phase too (full tapered eval); 0 = off
 };
 EvalWeights W;
 
@@ -197,6 +198,62 @@ const int KING_PST_EG[64] = {
     -30,-30,  0,  0,  0,  0,-30,-30,
     -50,-30,-30,-30,-30,-30,-30,-50
 };
+// Endgame tables for the other pieces, blended against the middlegame tables above by
+// game phase (full tapered eval). Hand-set in the same rank-8-first orientation and scale.
+// Pawns change the most: in the endgame their whole value is advancing toward promotion,
+// so the table rewards rank over the central files it favours in the middlegame. The
+// pieces change less (a knight still wants the centre in both phases), so their endgame
+// tables are gentler variants; A/B self-play judges whether the tapering is a net gain.
+const int PAWN_PST_EG[64] = {
+     0,  0,  0,  0,  0,  0,  0,  0,
+    90, 90, 90, 90, 90, 90, 90, 90,
+    55, 55, 55, 55, 55, 55, 55, 55,
+    30, 30, 30, 30, 30, 30, 30, 30,
+    20, 20, 20, 20, 20, 20, 20, 20,
+    10, 10, 10, 10, 10, 10, 10, 10,
+    10, 10, 10, 10, 10, 10, 10, 10,
+     0,  0,  0,  0,  0,  0,  0,  0
+};
+const int KNIGHT_PST_EG[64] = {
+    -40,-30,-20,-20,-20,-20,-30,-40,
+    -30,-10,  0,  0,  0,  0,-10,-30,
+    -20,  0, 10, 15, 15, 10,  0,-20,
+    -20,  5, 15, 20, 20, 15,  5,-20,
+    -20,  0, 15, 20, 20, 15,  0,-20,
+    -20,  5, 10, 15, 15, 10,  5,-20,
+    -30,-10,  0,  5,  5,  0,-10,-30,
+    -40,-30,-20,-20,-20,-20,-30,-40
+};
+const int BISHOP_PST_EG[64] = {
+    -15, -5, -5, -5, -5, -5, -5,-15,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0, 10, 15, 15, 10,  0, -5,
+     -5,  5, 15, 20, 20, 15,  5, -5,
+     -5,  5, 15, 20, 20, 15,  5, -5,
+     -5,  0, 10, 15, 15, 10,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+    -15, -5, -5, -5, -5, -5, -5,-15
+};
+const int ROOK_PST_EG[64] = {
+     0,  0,  0,  0,  0,  0,  0,  0,
+     5, 10, 10, 10, 10, 10, 10,  5,
+     0,  5,  5,  5,  5,  5,  5,  0,
+     0,  0,  5,  5,  5,  5,  0,  0,
+     0,  0,  5,  5,  5,  5,  0,  0,
+     0,  0,  5,  5,  5,  5,  0,  0,
+     0,  0,  5,  5,  5,  5,  0,  0,
+     0,  0,  5,  5,  5,  5,  0,  0
+};
+const int QUEEN_PST_EG[64] = {
+    -10, -5, -5, -5, -5, -5, -5,-10,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+     -5,  0,  5, 10, 10,  5,  0, -5,
+     -5,  0,  5, 10, 10,  5,  0, -5,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+    -10, -5, -5, -5, -5, -5, -5,-10
+};
 
 // Game phase: 24 with all the pieces on (middlegame), falling to 0 as they come off
 // (endgame). Standard weights: knight/bishop 1, rook 2, queen 4 (a full set sums to 24).
@@ -208,42 +265,37 @@ int game_phase(const Board& b) {
     return p > 24 ? 24 : p;
 }
 
-// Indexed by PieceType (Pawn=0 .. King=5).
-const int* const PST[6] = {
+// Middlegame and endgame tables, indexed by PieceType (Pawn=0 .. King=5).
+const int* const PST_MG[6] = {
     PAWN_PST, KNIGHT_PST, BISHOP_PST, ROOK_PST, QUEEN_PST, KING_PST
 };
+const int* const PST_EG[6] = {
+    PAWN_PST_EG, KNIGHT_PST_EG, BISHOP_PST_EG, ROOK_PST_EG, QUEEN_PST_EG, KING_PST_EG
+};
 
-// Table value for one piece on one square (White's perspective magnitude).
-int pst_value(Piece p, Square s) {
-    const int* table = PST[static_cast<int>(p.type)];
-    // White flips its square into the rank-8-first table orientation;
-    // Black reads directly (its square is already the mirror image).
-    Square idx = (p.color == Color::White)
-        ? make_square(file_of(s), 7 - rank_of(s))
-        : s;
-    return table[idx];
-}
-
+// Tapered piece-square score. Each piece contributes a middlegame and an endgame table
+// value; we sum both totals and blend once by game phase (full MG at 24, full EG at 0),
+// which is more precise than rounding per piece. A piece is only phased when its toggle
+// is on (phase_king for the king, phase_pieces for the rest); with a toggle off that
+// piece uses its middlegame value in both totals, so the blend leaves it unchanged.
 int pst_score(const Board& b) {
-    int score = 0;
-    int ph = game_phase(b);   // 24 = middlegame, 0 = endgame
+    int mg = 0, eg = 0;
     for (Square s = 0; s < 64; s++) {
         Piece p = b.squares[s];
         if (p.type == PieceType::None) continue;
-        int v;
-        if (p.type == PieceType::King && W.phase_king) {
-            // Blend the king's square value between the middlegame and endgame tables:
-            // full MG at phase 24, full EG at phase 0. Same orientation flip as pst_value.
-            Square idx = (p.color == Color::White)
-                ? make_square(file_of(s), 7 - rank_of(s))
-                : s;
-            v = (KING_PST[idx] * ph + KING_PST_EG[idx] * (24 - ph)) / 24;
-        } else {
-            v = pst_value(p, s);
-        }
-        score += (p.color == Color::White) ? v : -v;
+        int t = static_cast<int>(p.type);
+        // White flips its square into the rank-8-first orientation; Black reads directly.
+        Square idx = (p.color == Color::White)
+            ? make_square(file_of(s), 7 - rank_of(s))
+            : s;
+        bool phased = (p.type == PieceType::King) ? W.phase_king : W.phase_pieces;
+        int vmg = PST_MG[t][idx];
+        int veg = phased ? PST_EG[t][idx] : vmg;   // toggle off => endgame value == middlegame
+        if (p.color == Color::White) { mg += vmg; eg += veg; }
+        else                         { mg -= vmg; eg -= veg; }
     }
-    return score;
+    int ph = game_phase(b);   // 24 = middlegame, 0 = endgame
+    return (mg * ph + eg * (24 - ph)) / 24;
 }
 } // namespace
 
@@ -260,6 +312,7 @@ bool eval_set_weight(const std::string& name, int value) {
     else if (name == "RookOpen")   W.rook_open  = value;
     else if (name == "RookHalf")   W.rook_half  = value;
     else if (name == "PhaseKing")  W.phase_king = value;
+    else if (name == "PhasePieces") W.phase_pieces = value;
     else return false;
     return true;
 }

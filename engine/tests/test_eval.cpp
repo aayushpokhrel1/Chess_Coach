@@ -147,3 +147,15 @@ TEST_CASE("phased eval flips the king's square preference toward the endgame") {
     eval_set_weight("PhaseKing", 1);              // restore phased (default)
     CHECK(evaluate(central) > evaluate(corner));  // endgame rewards centralizing the king
 }
+
+TEST_CASE("full tapered eval values an advanced pawn more in the endgame") {
+    // Endgame (bare kings + one advanced white pawn, phase 0). The endgame pawn table
+    // rewards rank far more than the middlegame one, so turning the piece phasing on
+    // raises the score. Isolates the non-king tapering via the PhasePieces toggle.
+    Board b = board_from_fen("4k3/8/4P3/8/8/8/8/4K3 w - - 0 1"); // white Pe6
+    int with_ph = evaluate(b);
+    eval_set_weight("PhasePieces", 0);            // middlegame tables only for the pieces
+    int without = evaluate(b);
+    eval_set_weight("PhasePieces", 1);            // restore full tapering (default)
+    CHECK(with_ph > without);
+}
