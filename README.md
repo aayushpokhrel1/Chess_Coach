@@ -79,10 +79,13 @@ Engine milestones (correctness before speed):
   (how many squares each piece reaches), the bishop pair, doubled/isolated pawns, king safety
   (a pawn shield in front of the castled king), passed pawns (a pawn nothing can stop from
   promoting, worth more the further it has advanced), and rooks on open / half-open files, so it
-  plays more purposeful, developing chess rather than only counting material. Terms are validated by
-  A/B self-play (`web/scripts/ab.mjs`) before they ship: passed pawns measured +31 Elo (LOS 96%) and
-  open files +24 Elo (LOS 98%) over their absence, while a knight-outpost term was tried and dropped
-  when it failed to show a confident gain (a strict outpost is too rare to move the needle).
+  plays more purposeful, developing chess rather than only counting material. The king's table is
+  also phased (tapered): it blends between a middlegame table (hide behind pawns) and an endgame
+  table (march to the centre) by how much material is left, so the king plays actively once the
+  queens come off. Terms are validated by A/B self-play (`web/scripts/ab.mjs`) before they ship:
+  passed pawns measured +31 Elo, open files +24, and the phased king +38, all at LOS 96 to 98% over
+  their absence. Several plausible terms were tried and dropped when they failed to show a confident
+  gain (knight outposts, connected passers, a bad-bishop penalty), which is the point of validating.
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
