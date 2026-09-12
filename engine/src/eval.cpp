@@ -15,6 +15,7 @@ struct EvalWeights {
     int passed = 12;     // passed-pawn bonus per rank advanced (0 disables the term)
     int rook_open = 20;  // bonus for a rook on a fully open file (no pawns either side)
     int rook_half = 10;  // bonus for a rook on a half-open file (no friendly pawns)
+    int phase_king = 1;  // 1 = blend the king PST between middlegame and endgame by phase; 0 = off
 };
 EvalWeights W;
 
@@ -120,6 +121,7 @@ int rook_files(const Board& b, Color c) {
     }
     return bonus;
 }
+
 // Michniewski "Simplified Evaluation Function" tables, White's perspective,
 // printed rank 8 first, so index 0 = a8, index 63 = h1.
 const int PAWN_PST[64] = {
@@ -182,6 +184,29 @@ const int KING_PST[64] = {
      20, 20,  0,  0,  0,  0, 20, 20,
      20, 30, 10,  0,  0, 10, 30, 20
 };
+// Endgame king table (Michniewski): with the queens off the king should march to the
+// centre, not hide, so the centre scores high and the edges/corners low. Blended against
+// KING_PST above by game phase, so the king's preferred square shifts as pieces come off.
+const int KING_PST_EG[64] = {
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+};
+
+// Game phase: 24 with all the pieces on (middlegame), falling to 0 as they come off
+// (endgame). Standard weights: knight/bishop 1, rook 2, queen 4 (a full set sums to 24).
+int game_phase(const Board& b) {
+    int p = 0;
+    for (int c = 0; c < 2; c++)
+        p += popcount(b.bb[c][1]) + popcount(b.bb[c][2])
+           + 2 * popcount(b.bb[c][3]) + 4 * popcount(b.bb[c][4]);
+    return p > 24 ? 24 : p;
+}
 
 // Indexed by PieceType (Pawn=0 .. King=5).
 const int* const PST[6] = {
@@ -201,10 +226,21 @@ int pst_value(Piece p, Square s) {
 
 int pst_score(const Board& b) {
     int score = 0;
+    int ph = game_phase(b);   // 24 = middlegame, 0 = endgame
     for (Square s = 0; s < 64; s++) {
         Piece p = b.squares[s];
         if (p.type == PieceType::None) continue;
-        int v = pst_value(p, s);
+        int v;
+        if (p.type == PieceType::King && W.phase_king) {
+            // Blend the king's square value between the middlegame and endgame tables:
+            // full MG at phase 24, full EG at phase 0. Same orientation flip as pst_value.
+            Square idx = (p.color == Color::White)
+                ? make_square(file_of(s), 7 - rank_of(s))
+                : s;
+            v = (KING_PST[idx] * ph + KING_PST_EG[idx] * (24 - ph)) / 24;
+        } else {
+            v = pst_value(p, s);
+        }
         score += (p.color == Color::White) ? v : -v;
     }
     return score;
@@ -223,6 +259,7 @@ bool eval_set_weight(const std::string& name, int value) {
     else if (name == "Passed")     W.passed     = value;
     else if (name == "RookOpen")   W.rook_open  = value;
     else if (name == "RookHalf")   W.rook_half  = value;
+    else if (name == "PhaseKing")  W.phase_king = value;
     else return false;
     return true;
 }

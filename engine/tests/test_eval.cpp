@@ -137,3 +137,13 @@ TEST_CASE("v2 king safety penalizes an exposed king, but only with enemy queens 
     Board endgame = board_from_fen("6k1/5ppp/8/8/8/8/8/6K1 w - - 0 1");
     CHECK(positional_eval(endgame) > positional_eval(exposed));
 }
+
+TEST_CASE("phased eval flips the king's square preference toward the endgame") {
+    // Bare kings (phase 0, full endgame). Compare a central white king to a corner one.
+    Board central = board_from_fen("7k/8/8/8/4K3/8/8/8 w - - 0 1"); // white Ke4 (centre)
+    Board corner  = board_from_fen("7k/8/8/8/8/8/8/K7 w - - 0 1");   // white Ka1 (corner)
+    eval_set_weight("PhaseKing", 0);              // middlegame table only: tuck the king away
+    CHECK(evaluate(central) < evaluate(corner));  // MG penalizes the central king
+    eval_set_weight("PhaseKing", 1);              // restore phased (default)
+    CHECK(evaluate(central) > evaluate(corner));  // endgame rewards centralizing the king
+}
