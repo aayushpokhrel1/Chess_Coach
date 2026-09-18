@@ -1,0 +1,13 @@
+{
+  // Cloudflare Workers Static Assets: an assets-only deploy (no Worker script).
+  // `wrangler deploy` uploads ./dist as static files served at the site root.
+  // `not_found_handling: single-page-application` serves index.html for unknown
+  // paths, harmless now (no client routes) and correct if routes are added later.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chess-coach",
+  "compatibility_date": "2026-09-18",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

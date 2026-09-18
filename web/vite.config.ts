@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 
-// GitHub Pages serves at https://<user>.github.io/Chess_Coach/ (a subpath), but
-// Cloudflare Pages serves at a domain root. Cloudflare auto-sets CF_PAGES=1 during
-// its build, so pick the base per host: root there, subpath on GH Pages. `base`
-// makes Vite emit base-relative URLs and sets import.meta.env.BASE_URL; anything
-// referencing a public asset by URL must prefix BASE_URL rather than a bare leading
-// slash (see engine.ts / play.ts). In dev, base is "/" so nothing changes locally.
+// Served at the root of chess-coach.pages.dev (Cloudflare), so base is '/'. `base`
+// sets import.meta.env.BASE_URL, which code prefixes onto public-asset URLs (the
+// Stockfish and WASM engine workers in engine.ts / play.ts), so '/' keeps those
+// resolving at the site root. If this ever moves to a subpath host, set base to
+// that subpath and those asset URLs follow automatically.
 export default defineConfig({
-  base: process.env.CF_PAGES ? '/' : '/Chess_Coach/',
+  base: '/',
 });
