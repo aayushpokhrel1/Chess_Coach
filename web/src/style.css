@@ -352,6 +352,122 @@ textarea:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+   The segmented control
+   --------------------------------------------------------------------------- */
+.segmented {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--room);
+}
+
+/* The indicator slides with a transform, so no layout runs on a key press. */
+.segmented-indicator {
+  position: absolute;
+  top: 0.25rem;
+  left: 0;
+  height: calc(100% - 0.5rem);
+  border-radius: var(--r-pill);
+  background: var(--raised);
+  transition: transform var(--t-state) var(--ease);
+  pointer-events: none;
+}
+
+.segmented-option {
+  position: relative;
+  z-index: 1;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.segmented-option:hover:not(.is-selected) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text);
+}
+
+.segmented-option.is-selected {
+  background: transparent;
+  color: var(--text-bright);
+}
+
+/* ---------------------------------------------------------------------------
+   The level picker
+   --------------------------------------------------------------------------- */
+.level-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.level-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  flex: 1 1 11rem;
+  min-width: 11rem;
+  max-width: 16rem;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  background: var(--room);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.level-card:hover:not(.is-selected) {
+  background: var(--room);
+  border-color: var(--edge-light);
+  color: var(--text);
+}
+
+.level-card.is-selected {
+  background: var(--raised);
+  border-color: var(--edge-light);
+  color: var(--text);
+}
+
+.level-elo {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text-muted);
+}
+
+.level-card.is-selected .level-elo {
+  color: var(--text-bright);
+}
+
+.level-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.level-card.is-selected .level-name {
+  color: var(--text-bright);
+}
+
+.level-blurb {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
    The hero
    --------------------------------------------------------------------------- */
 .hero {

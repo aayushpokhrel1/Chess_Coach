@@ -10,6 +10,7 @@
 import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
 import { Chess } from 'chess.js';
+import { createLevelPicker, createSegmented, type Level } from './controls';
 import { legalDests } from './drill';
 import { parseInfo, type Info } from './uciParse';
 
@@ -22,14 +23,14 @@ const $ = (id: string) => document.getElementById(id)!;
 // after null-move pruning + bitboards + eval v2: the ladder rose ~60-100 Elo.
 // Depths 2 and 3 still score the SAME (~1520 vs ~1536, within the error bar), so
 // depth 3 stays dropped (same strength, slower) and depth 4 (~1660) is the top.
-const LEVELS = [
+const LEVELS: Level[] = [
   // Novice is BELOW the engine's floor (depth-1 search is already ~1190), so it
   // is weakened by playing a random legal move `random` of the time. That rate is
   // an uncalibrated guess, not a gauntlet number; tune it if it plays too strong.
-  { label: 'Novice (~600)', depth: 1, random: 0.6 },
-  { label: 'Beginner (~1190)', depth: 1 },
-  { label: 'Intermediate (~1520)', depth: 2 },
-  { label: 'Advanced (~1660)', depth: 4 },
+  { name: 'Novice', elo: null, blurb: 'Plays half at random. For your first games.', depth: 1, random: 0.6 },
+  { name: 'Beginner', elo: 1190, blurb: 'Sees one move ahead. Punishes hanging pieces.', depth: 1 },
+  { name: 'Intermediate', elo: 1520, blurb: 'Sees two moves ahead. Will trade you down.', depth: 2 },
+  { name: 'Advanced', elo: 1660, blurb: 'Four moves ahead with quiescence. Plays real chess.', depth: 4 },
 ];
 
 // Time controls: initial ms + increment ms per move. ms 0 = unlimited (no clock).
@@ -121,17 +122,29 @@ function bootEngine(): Promise<Worker> {
 }
 
 export function initPlay() {
-  // Fill the Level and Time selects once.
-  const levelSel = $('playLevel') as HTMLSelectElement;
-  const timeSel = $('playTime') as HTMLSelectElement;
-  LEVELS.forEach((l, i) => levelSel.add(new Option(l.label, String(i), i === 0, i === 0)));
-  TIMES.forEach((t, i) => timeSel.add(new Option(t.label, String(i), i === 0, i === 0)));
+  // Mount the three controls once. Each keeps its own state; the game reads
+  // their .value when New game is pressed.
+  const levelPicker = createLevelPicker(LEVELS, 0);
+  $('playLevelMount').appendChild(levelPicker.el);
+  const colorPicker = createSegmented(
+    [
+      { value: 'white', label: 'Play as White' },
+      { value: 'black', label: 'Play as Black' },
+    ],
+    'white',
+  );
+  $('playColorMount').appendChild(colorPicker.el);
+  const timePicker = createSegmented(
+    TIMES.map((t, i) => ({ value: String(i), label: t.label })),
+    '0',
+  );
+  $('playTimeMount').appendChild(timePicker.el);
 
   let board: Api | null = null;
   let worker: Worker | null = null;
   let game = new Chess();
   let human: 'white' | 'black' = 'white';
-  let depth = LEVELS[0].depth; // overwritten on New game from the Level select
+  let depth = LEVELS[0].depth; // overwritten on New game from the level picker
   let randomProb = 0;          // Novice weakening: chance to play a random legal move
   const moves: string[] = []; // uci moves so far, for `position startpos moves ...`
   let viewIdx = 0;            // board history cursor; == moves.length means the live position
@@ -280,11 +293,11 @@ export function initPlay() {
   async function newGame() {
     stopTicker();
     over = false;
-    human = ($('playColor') as HTMLSelectElement).value === 'black' ? 'black' : 'white';
-    const lvl = LEVELS[Number(levelSel.value)];
+    human = colorPicker.value === 'black' ? 'black' : 'white';
+    const lvl = LEVELS[Number(levelPicker.value)];
     depth = lvl.depth;
     randomProb = lvl.random ?? 0;
-    const tc = TIMES[Number(timeSel.value)];
+    const tc = TIMES[Number(timePicker.value)];
     unlimited = tc.ms === 0;
     clock = { w: tc.ms, b: tc.ms };
     inc = tc.inc;
