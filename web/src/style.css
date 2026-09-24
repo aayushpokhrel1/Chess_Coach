@@ -778,6 +778,19 @@ textarea:focus-visible {
   color: var(--text);
 }
 
+/* The engine made visible: what it is doing while it thinks. */
+.readout {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--lamp-dim);
+  text-align: center;
+  min-height: 1.2rem;
+  margin-top: 0.75rem;
+}
+
 /* ---------------------------------------------------------------------------
    Eval graph
    --------------------------------------------------------------------------- */

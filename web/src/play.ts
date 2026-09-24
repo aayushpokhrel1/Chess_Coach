@@ -11,6 +11,7 @@ import { Chessground } from 'chessground';
 import type { Api } from 'chessground/api';
 import { Chess } from 'chess.js';
 import { legalDests } from './drill';
+import { parseInfo, type Info } from './uciParse';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -48,14 +49,48 @@ function fmtClock(ms: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+// The readout strip: depth, nodes and nps while the engine searches. Fields the
+// engine did not report are left out rather than printed as undefined.
+const NODES = new Intl.NumberFormat('en-US');
+
+function readoutEl(): HTMLElement | null {
+  return document.getElementById('engineReadout');
+}
+
+function showReadout(info: Info) {
+  const el = readoutEl();
+  if (!el) return;
+  const parts: string[] = [];
+  if (info.depth) parts.push(`depth ${info.depth}`);
+  if (info.nodes !== undefined) parts.push(`${NODES.format(info.nodes)} nodes`);
+  if (info.nps !== undefined) parts.push(`${Math.round(info.nps / 1000)}k nps`);
+  if (!parts.length) return;
+  el.textContent = parts.join(' \u00b7 ');
+  el.hidden = false;
+}
+
+function hideReadout() {
+  const el = readoutEl();
+  if (!el) return;
+  el.hidden = true;
+  el.textContent = '';
+}
+
 // One request/response over the engine worker: send the move list, ask it to
 // search to `depth`, resolve with the bestmove uci string ("e2e4", "e7e8q").
 function askEngine(worker: Worker, moves: string[], depth: number): Promise<string> {
   return new Promise((resolve) => {
     const onMsg = (e: MessageEvent) => {
-      const m = String(e.data).match(/^bestmove (\S+)/);
+      const line = String(e.data);
+      const info = parseInfo(line);
+      if (info) {
+        showReadout(info);
+        return;
+      }
+      const m = line.match(/^bestmove (\S+)/);
       if (m) {
         worker.removeEventListener('message', onMsg);
+        hideReadout();
         resolve(m[1]);
       }
     };

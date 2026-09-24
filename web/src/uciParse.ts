@@ -6,6 +6,8 @@ export interface Info {
   depth: number;
   score: Score;
   pv: string[];
+  nodes?: number;
+  nps?: number;
 }
 
 // Parse a UCI "info ..." line. Returns null if it is not an info line or has no score.
@@ -27,7 +29,7 @@ export function parseInfo(line: string): Info | null {
 
   const pi = t.indexOf('pv');
   const pv = pi >= 0 ? t.slice(pi + 1) : [];
-  return { depth: num('depth') ?? 0, score, pv };
+  return { depth: num('depth') ?? 0, score, pv, nodes: num('nodes'), nps: num('nps') };
 }
 
 // Parse a UCI "bestmove <move> [ponder <move>]" line. Returns null otherwise.

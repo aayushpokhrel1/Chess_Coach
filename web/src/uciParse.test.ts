@@ -21,6 +21,19 @@ describe('parseInfo', () => {
   it('returns null for non-info lines', () => {
     expect(parseInfo('readyok')).toBeNull();
   });
+
+  it('carries nodes and nps when the engine reports them', () => {
+    const info = parseInfo('info depth 7 score cp 34 nodes 120450 nps 890000 pv e2e4 e7e5');
+    expect(info).not.toBeNull();
+    expect(info!.nodes).toBe(120450);
+    expect(info!.nps).toBe(890000);
+  });
+
+  it('leaves nodes and nps undefined when absent', () => {
+    const info = parseInfo('info depth 3 score cp 12 pv e2e4');
+    expect(info!.nodes).toBeUndefined();
+    expect(info!.nps).toBeUndefined();
+  });
 });
 
 describe('parseBestMove', () => {
