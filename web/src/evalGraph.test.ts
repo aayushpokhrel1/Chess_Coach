@@ -38,6 +38,11 @@ describe('buildGraph', () => {
     expect(g.markers[0].quality).toBe('mistake');
   });
 
+  it('defaults to the Analysis Room graph height', () => {
+    const g = buildGraph([{ cp: 0 }, { cp: 120 }] as never);
+    expect(g.height).toBe(160);
+  });
+
   it('handles an empty game without throwing', () => {
     const g = buildGraph([]);
     expect(g.nodes).toEqual([]);

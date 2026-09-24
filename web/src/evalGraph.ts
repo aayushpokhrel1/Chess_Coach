@@ -37,7 +37,7 @@ export function squash(cp: number): number {
 
 const WORST: Quality[] = ['inaccuracy', 'mistake', 'blunder'];
 
-export function buildGraph(points: GraphPoint[], width = 640, height = 120): Graph {
+export function buildGraph(points: GraphPoint[], width = 640, height = 160): Graph {
   const midY = height / 2;
   const n = points.length;
   const pad = 3; // keep the line off the very edges

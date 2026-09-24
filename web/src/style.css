@@ -625,7 +625,7 @@ textarea:focus-visible {
   right: 0;
   background: var(--board-light);
   height: 50%;
-  transition: height 200ms var(--ease);
+  transition: height var(--t-piece) var(--ease);
 }
 
 #nav,
@@ -912,9 +912,11 @@ textarea:focus-visible {
    --------------------------------------------------------------------------- */
 .evalgraph {
   width: 100%;
-  height: 120px;
-  margin: 0.5rem 0 1rem;
+  height: 160px;
+  margin: 1rem 0 2rem;
   background: var(--raised);
+  border-radius: var(--r-lg);
+  border-top: 1px solid var(--edge-light);
   overflow: hidden;
 }
 .ga-svg {
@@ -925,22 +927,23 @@ textarea:focus-visible {
 }
 .ga-white {
   fill: var(--board-light);
-} /* White's territory under the line */
+  opacity: 0.16;
+}
 .ga-mid {
-  stroke: var(--text-muted);
+  stroke: var(--hairline);
   stroke-width: 1;
   stroke-dasharray: 3 3;
-  opacity: 0.35;
 }
 .ga-line {
   fill: none;
   stroke: var(--lamp);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px var(--lamp-glow));
 }
 .ga-dot {
   stroke: var(--room);
-  stroke-width: 1;
+  stroke-width: 1.5;
   cursor: pointer;
 }
 .ga-dot.q-inaccuracy {
@@ -953,9 +956,44 @@ textarea:focus-visible {
   fill: var(--verdict-blunder);
 }
 .ga-cursor {
-  stroke: var(--lamp);
+  stroke: var(--text-bright);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
+}
+
+/* The authored moment: the game's shape revealing itself, once per analysis. */
+.evalgraph.is-revealing .ga-line {
+  stroke-dasharray: var(--line-len);
+  stroke-dashoffset: var(--line-len);
+  animation: ga-draw var(--t-draw) var(--ease) forwards;
+}
+.evalgraph.is-revealing .ga-dot {
+  opacity: 0;
+  animation: ga-flare 320ms var(--ease) forwards;
+  animation-delay: calc(var(--t-draw) + var(--flare-i, 0) * 40ms);
+}
+@keyframes ga-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ga-flare {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .evalgraph.is-revealing .ga-line,
+  .evalgraph.is-revealing .ga-dot {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
 }
 
 /* ---------------------------------------------------------------------------

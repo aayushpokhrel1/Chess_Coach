@@ -207,6 +207,8 @@ function pvToSan(fenBefore: string, uci: string[], max = 6): string {
 // cursor. Clicking anywhere jumps to the nearest move.
 function renderGraph() {
   const host = $('evalgraph');
+  // A re-render restarts the reveal cleanly instead of leaving a stale class.
+  host.classList.remove('is-revealing');
   if (!graph || graph.nodes.length === 0) {
     host.hidden = true;
     host.innerHTML = '';
@@ -230,6 +232,24 @@ function renderGraph() {
   host.hidden = false;
 
   const svg = host.querySelector('svg')!;
+
+  // The authored motion moment: the line draws itself once per analysis and the
+  // dots flare in behind it. getTotalLength throws where SVG geometry is not
+  // implemented, so a failure just skips the reveal and leaves the graph drawn.
+  const line = svg.querySelector('.ga-line') as SVGPolylineElement | null;
+  if (line) {
+    try {
+      const len = line.getTotalLength();
+      host.style.setProperty('--line-len', String(len));
+      svg.querySelectorAll('.ga-dot').forEach((dot, i) =>
+        (dot as SVGElement).style.setProperty('--flare-i', String(i)),
+      );
+      host.classList.add('is-revealing');
+    } catch {
+      /* no SVG geometry here: show the graph without the reveal */
+    }
+  }
+
   const jump = (clientX: number) => {
     const rect = svg.getBoundingClientRect();
     const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
