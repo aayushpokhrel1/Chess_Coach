@@ -278,13 +278,97 @@ textarea:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+   The hero
+   --------------------------------------------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4.5rem;
+  align-items: center;
+  min-height: min(72vh, 720px);
+  padding: 2rem 0 4rem;
+}
+
+.hero-copy {
+  max-width: 34ch;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 48ch;
+  margin: 0 0 2rem;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-lamp,
+.btn-ghost {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease),
+    border-color var(--t-state) var(--ease);
+}
+.btn-lamp {
+  background: var(--lamp);
+  color: var(--void);
+  border: 1px solid var(--lamp);
+}
+.btn-lamp:hover {
+  background: var(--lamp-dim);
+  border-color: var(--lamp-dim);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-bright);
+  border: 1px solid var(--hairline);
+}
+.btn-ghost:hover {
+  border-color: var(--edge-light);
+  background: var(--raised);
+}
+
+.hero-stage {
+  position: relative;
+}
+.hero-board {
+  width: 560px;
+  height: 560px;
+}
+/* The rim light: the lamp catching the board's top edge. */
+.hero-stage::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--lamp-glow), transparent 40%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------------------
    Tabs
    --------------------------------------------------------------------------- */
 .tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--room);
   display: flex;
   gap: 0.25rem;
   border-bottom: 1px solid var(--hairline);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .tab {
@@ -513,6 +597,16 @@ textarea:focus-visible {
 }
 
 @media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding-bottom: 3rem;
+  }
+  .hero-board {
+    width: min(560px, 100vw - 3rem);
+    height: auto;
+    aspect-ratio: 1;
+  }
   .layout {
     flex-wrap: wrap;
     gap: 2rem;

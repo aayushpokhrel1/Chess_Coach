@@ -12,6 +12,7 @@ import { fetchLichess, fetchChessCom } from './import';
 import { barPercent } from './evalBar';
 import { buildGraph, type Graph } from './evalGraph';
 import { buildScore } from './annotate';
+import { createHeroLoop } from './hero';
 import { initPlay } from './play';
 
 const boardEl = document.getElementById('board')!;
@@ -56,6 +57,54 @@ function showTab(name: 'play' | 'coach') {
 }
 $('tabPlay').addEventListener('click', () => showTab('play'));
 $('tabCoach').addEventListener('click', () => showTab('coach'));
+
+// --- The hero: a miniature replaying on the landing board ---
+
+// Morphy's Opera Game, truncated to its first 16 plies. The FEN list is
+// generated with chess.js so no position is hand-typed.
+const HERO_PGN =
+  '1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6';
+
+function heroFens(): string[] {
+  const source = new Chess();
+  source.loadPgn(HERO_PGN);
+  const history = source.history();
+  const g = new Chess();
+  const fens = [g.fen()];
+  for (const san of history) {
+    g.move(san);
+    fens.push(g.fen());
+  }
+  return fens;
+}
+
+function startHero() {
+  const el = document.getElementById('heroBoard');
+  if (!el) return;
+  const api = setupBoard(el);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const loop = createHeroLoop({
+    fens: heroFens(),
+    reducedMotion: reduced,
+    onPosition: (fen) => api.set({ fen: fen.split(' ')[0] }),
+  });
+  loop.start();
+  return loop;
+}
+
+const hero = startHero();
+
+// The entry actions stop the loop so it does not run behind the app.
+document.getElementById('goPlay')?.addEventListener('click', () => {
+  hero?.stop();
+  showTab('play');
+  document.getElementById('tab-play')?.scrollIntoView({ behavior: 'smooth' });
+});
+document.getElementById('goCoach')?.addEventListener('click', () => {
+  hero?.stop();
+  showTab('coach');
+  document.getElementById('tab-coach')?.scrollIntoView({ behavior: 'smooth' });
+});
 
 // Remember the inputs (not the analysis) across refreshes.
 const SAVE_KEYS = ['pgn', 'username', 'fetchUser'] as const;

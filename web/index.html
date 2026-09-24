@@ -7,7 +7,22 @@
   </head>
   <body>
     <main id="app">
-      <h1>Chess Coach</h1>
+      <section class="hero">
+        <div class="hero-copy">
+          <h1>Find out what you actually did wrong.</h1>
+          <p class="hero-sub">
+            Paste a game you lost. Every move gets checked by an engine, the mistakes get
+            explained in plain language, and then you drill the positions you got wrong.
+          </p>
+          <div class="hero-actions">
+            <button id="goPlay" class="btn-lamp">Play the engine</button>
+            <button id="goCoach" class="btn-ghost">Analyze your game</button>
+          </div>
+        </div>
+        <div class="hero-stage">
+          <div id="heroBoard" class="board hero-board"></div>
+        </div>
+      </section>
       <nav class="tabs">
         <button id="tabPlay" class="tab active">Play the engine</button>
         <button id="tabCoach" class="tab">Analyze &amp; drills</button>
