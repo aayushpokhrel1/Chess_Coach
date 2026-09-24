@@ -1,79 +1,135 @@
 @import '@fontsource-variable/inter';
+@import '@fontsource-variable/fraunces';
 
-/* ---------------------------------------------------------------------------
-   Chess Coach design tokens. See DESIGN.md ("The Club Room") at the repo root.
-   --------------------------------------------------------------------------- */
+/* Analysis Room tokens. See DESIGN.md and the spec at
+   docs/superpowers/specs/2026-09-23-analysis-room-redesign.md */
 :root {
-  /* Primary: the one brand voice. */
-  --felt: #3f5f4a;
-  --felt-deep: #334e3c;
-  --felt-wash: #e7ede9;
+  /* Room */
+  --void: #0b0f0e;
+  --room: #121816;
+  --raised: #1a2220;
+  --edge-light: rgba(255, 255, 255, 0.06);
+  --hairline: rgba(255, 255, 255, 0.09);
 
-  /* Secondary: the board owns the wood. UI chrome never uses these. */
-  --board-light: #f0d9b5;
-  --board-dark: #b58863;
+  /* Text */
+  --text-bright: #f2ece1;
+  --text: #cfc8bc;
+  --text-muted: #8e877c;
+  --text-faint: #6e675e;
 
-  /* Tertiary: move quality, and nothing else. */
-  --verdict-best: #1d7a44;
-  --verdict-inaccuracy: #8f6200;
-  --verdict-mistake: #c2410c;
-  --verdict-blunder: #b3261e;
+  /* Signature: light, never decoration */
+  --lamp: #f0d9a8;
+  --lamp-dim: #d4bc89;
+  --lamp-glow: rgba(240, 217, 168, 0.14);
+  --lamp-ring: rgba(240, 217, 168, 0.35);
 
-  /* Neutral. */
-  --page: #faf6f0;
-  --surface: #ffffff;
-  --surface-sunken: #f3ece2;
-  --hairline: #e3d9cc;
-  --ink: #23201c;
-  --ink-muted: #6b6259;
-  --ink-faint: #9a9086;
+  /* Board. Not UI colors. */
+  --board-dark: #4a5a52;
+  --board-light: #b3bfb6;
 
-  --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
+  /* Verdict: the only saturated hue in the interface */
+  --verdict-sound: #4ea87a;
+  --verdict-inaccuracy: #d9a441;
+  --verdict-mistake: #e07a3c;
+  --verdict-blunder: #e0524a;
+
+  /* Type */
+  --font-display: 'Fraunces Variable', Fraunces, Georgia, serif;
+  --font-ui: 'Inter Variable', Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Shape */
   --r-sm: 4px;
   --r-md: 8px;
-  --r-lg: 12px;
+  --r-lg: 14px;
+  --r-pill: 999px;
 
-  --shadow-rest: 0 1px 2px rgba(35, 32, 28, 0.04), 0 2px 8px rgba(35, 32, 28, 0.06);
-  --shadow-raised: 0 2px 4px rgba(35, 32, 28, 0.06), 0 8px 20px rgba(35, 32, 28, 0.1);
-  --focus-ring: 0 0 0 3px rgba(63, 95, 74, 0.28);
+  /* Elevation. Panels do not use shadows; only objects above the room do. */
+  --shadow-board: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --focus-ring: 0 0 0 3px var(--lamp-ring);
 
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Motion */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --t-state: 150ms;
+  --t-piece: 240ms;
+  --t-draw: 700ms;
 }
 
-/* ---------------------------------------------------------------------------
-   Page
-   --------------------------------------------------------------------------- */
+/* Board squares belong to the room. cburnett pieces are unchanged. */
+cg-board {
+  background-color: var(--board-light);
+}
+cg-board square.light {
+  background-color: var(--board-light);
+}
+cg-board square.dark {
+  background-color: var(--board-dark);
+}
+.cg-wrap {
+  box-shadow: var(--shadow-board);
+}
+
+html {
+  background: var(--void);
+}
+
 body {
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.5;
   margin: 0;
-  color: var(--ink);
-  background: var(--page); /* explicit: without it the app's dark pane shows through */
+  color: var(--text);
+  background: var(--room);
   -webkit-text-size-adjust: 100%;
+  position: relative;
+}
+
+/* The lamp above the board, and the vignette at the edges. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60vw 45vh at 50% 8%, var(--lamp-glow), transparent 70%),
+    radial-gradient(120vw 120vh at 50% 45%, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Film grain: removes banding from the gradients and gives the room texture. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #app {
-  max-width: 1040px;
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 1.5rem 4.5rem;
 }
 
 h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--text-bright);
   margin: 0 0 1.5rem;
+  text-wrap: balance;
 }
 
-/* Browser surfaces that ship with no design system of their own. */
 ::selection {
-  background: var(--felt-wash);
-  color: var(--felt-deep);
+  background: var(--lamp);
+  color: var(--void);
 }
 
 :focus-visible {
@@ -82,12 +138,22 @@ h1 {
 }
 
 a {
-  color: var(--felt);
+  color: var(--lamp);
   text-underline-offset: 0.2em;
   text-decoration-thickness: 1px;
 }
 a:hover {
-  color: var(--felt-deep);
+  color: var(--lamp-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .moves::-webkit-scrollbar {
@@ -98,11 +164,11 @@ a:hover {
 }
 .moves::-webkit-scrollbar-thumb {
   background: var(--hairline);
-  border-radius: 999px;
-  border: 3px solid var(--surface);
+  border-radius: var(--r-pill);
+  border: 3px solid var(--room);
 }
 .moves::-webkit-scrollbar-thumb:hover {
-  background: var(--ink-faint);
+  background: var(--text-faint);
 }
 .moves {
   scrollbar-width: thin;
@@ -128,8 +194,8 @@ select {
   padding: 0.5rem 1rem;
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--raised);
+  color: var(--text);
   cursor: pointer;
   transition:
     background var(--t-state) var(--ease),
@@ -139,31 +205,31 @@ select {
 
 button:hover:not(:disabled),
 select:hover {
-  background: var(--felt-wash);
-  color: var(--felt-deep);
-  border-color: var(--felt-wash);
+  background: var(--raised);
+  color: var(--text-bright);
+  border-color: var(--edge-light);
 }
 
 button:disabled {
-  color: var(--ink-faint);
+  color: var(--text-faint);
   cursor: default;
 }
 
 /* The one action that advances the task in a region. */
 button.primary {
-  background: var(--felt);
-  color: var(--page);
-  border-color: var(--felt);
+  background: var(--lamp);
+  color: var(--void);
+  border-color: var(--lamp);
 }
 button.primary:hover:not(:disabled) {
-  background: var(--felt-deep);
-  border-color: var(--felt-deep);
-  color: var(--page);
+  background: var(--lamp-dim);
+  border-color: var(--lamp-dim);
+  color: var(--void);
 }
 button.primary:disabled {
-  background: var(--surface);
+  background: var(--raised);
   border-color: var(--hairline);
-  color: var(--ink-faint);
+  color: var(--text-faint);
 }
 
 input,
@@ -175,19 +241,19 @@ textarea {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: var(--surface-sunken);
-  color: var(--ink);
+  background: var(--raised);
+  color: var(--text);
   transition: border-color var(--t-state) var(--ease);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--ink-faint);
+  color: var(--text-faint);
 }
 
 input:focus-visible,
 textarea:focus-visible {
-  border-color: var(--felt);
+  border-color: var(--lamp);
 }
 
 #pgn {
@@ -211,7 +277,7 @@ textarea:focus-visible {
 #fetchStatus,
 #reportStatus,
 #drillProgress {
-  color: var(--ink-muted);
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -221,7 +287,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -246,24 +312,24 @@ textarea:focus-visible {
   border-radius: var(--r-md) var(--r-md) 0 0;
   background: none;
   padding: 0.5rem 1rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   margin-bottom: -1px;
 }
 
 .tab:hover:not(.active) {
-  color: var(--ink);
-  background: var(--felt-wash);
+  color: var(--text);
+  background: var(--raised);
   border-color: transparent;
 }
 
 .tab.active {
-  background: var(--surface);
-  color: var(--ink);
-  border-bottom-color: var(--felt);
+  background: var(--raised);
+  color: var(--text-bright);
+  border-bottom-color: var(--lamp);
 }
 
 .tab-intro {
-  color: var(--ink-muted);
+  color: var(--text-muted);
   margin: 0 0 1rem;
   max-width: 70ch;
 }
@@ -325,7 +391,7 @@ textarea:focus-visible {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   min-width: 4rem;
   text-align: center;
 }
@@ -337,9 +403,9 @@ textarea:focus-visible {
 .report,
 .drill,
 .evalgraph {
-  background: var(--surface);
+  background: var(--raised);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-rest);
+  border-top: 1px solid var(--edge-light);
 }
 
 .side {
@@ -366,7 +432,7 @@ textarea:focus-visible {
 .explain {
   min-height: 3rem;
   padding: 0.75rem;
-  background: var(--surface-sunken);
+  background: var(--raised);
   border-radius: var(--r-md);
   margin-bottom: 0.75rem;
   line-height: 1.55;
@@ -381,7 +447,7 @@ textarea:focus-visible {
   overflow-y: auto;
   padding-left: 2rem;
   margin: 0;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .moves li {
@@ -392,18 +458,18 @@ textarea:focus-visible {
   transition: background var(--t-state) var(--ease);
 }
 .moves li:hover {
-  background: var(--felt-wash);
+  background: var(--raised);
 }
 .moves li.active {
-  background: var(--felt-wash);
-  border-left-color: var(--felt);
+  background: var(--raised);
+  border-left-color: var(--lamp);
 }
 
 .moves .san {
   font-family: var(--font-mono);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .badge {
@@ -416,7 +482,7 @@ textarea:focus-visible {
 }
 .q-best,
 .q-good {
-  color: var(--verdict-best);
+  color: var(--verdict-sound);
 }
 .q-inaccuracy {
   color: var(--verdict-inaccuracy);
@@ -450,7 +516,7 @@ textarea:focus-visible {
 .report caption {
   text-align: left;
   font-weight: 600;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 .report td {
@@ -458,7 +524,7 @@ textarea:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .report td:last-child {
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------------------------
@@ -473,14 +539,14 @@ textarea:focus-visible {
 }
 .drill #drillFeedback {
   min-height: 1.4rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 .promo {
   margin: 0.5rem 0;
   display: flex;
   gap: 4px;
   align-items: center;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -497,7 +563,7 @@ textarea:focus-visible {
   min-height: 1.4rem;
   margin: 0.5rem 0 0.75rem;
   font-weight: 600;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .play-board {
@@ -513,7 +579,7 @@ textarea:focus-visible {
   text-align: right;
   min-height: 1.6rem;
   padding: 0.1rem 0.4rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 /* ---------------------------------------------------------------------------
@@ -523,9 +589,7 @@ textarea:focus-visible {
   width: 100%;
   height: 120px;
   margin: 0.5rem 0 1rem;
-  /* Black's territory, above the eval line. A warm mid-tone rather than near-black:
-     the felt line and cursor cross both fields and have to stay legible on each. */
-  background: #b9ae9e;
+  background: var(--raised);
   overflow: hidden;
 }
 .ga-svg {
@@ -535,22 +599,22 @@ textarea:focus-visible {
   cursor: pointer;
 }
 .ga-white {
-  fill: var(--page);
+  fill: var(--board-light);
 } /* White's territory under the line */
 .ga-mid {
-  stroke: var(--ink-muted);
+  stroke: var(--text-muted);
   stroke-width: 1;
   stroke-dasharray: 3 3;
   opacity: 0.35;
 }
 .ga-line {
   fill: none;
-  stroke: var(--felt);
+  stroke: var(--lamp);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
 .ga-dot {
-  stroke: #fff;
+  stroke: var(--room);
   stroke-width: 1;
   cursor: pointer;
 }
@@ -564,7 +628,7 @@ textarea:focus-visible {
   fill: var(--verdict-blunder);
 }
 .ga-cursor {
-  stroke: var(--felt);
+  stroke: var(--lamp);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
@@ -572,7 +636,7 @@ textarea:focus-visible {
 .bestline {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   margin: 0.25rem 0 0.75rem;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
