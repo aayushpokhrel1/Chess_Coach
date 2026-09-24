@@ -106,11 +106,30 @@ document.getElementById('goCoach')?.addEventListener('click', () => {
   document.getElementById('tab-coach')?.scrollIntoView({ behavior: 'smooth' });
 });
 
+// The import service. It used to be a <select>; it is now two toggle buttons,
+// so the choice lives in a variable and the buttons only mirror it.
+let source: 'lichess' | 'chesscom' = 'lichess';
+
+function setSource(next: 'lichess' | 'chesscom') {
+  source = next;
+  document.getElementById('srcLichess')?.classList.toggle('is-active', next === 'lichess');
+  document.getElementById('srcChesscom')?.classList.toggle('is-active', next === 'chesscom');
+}
+
+document.getElementById('srcLichess')?.addEventListener('click', () => {
+  setSource('lichess');
+  saveSession();
+});
+document.getElementById('srcChesscom')?.addEventListener('click', () => {
+  setSource('chesscom');
+  saveSession();
+});
+
 // Remember the inputs (not the analysis) across refreshes.
 const SAVE_KEYS = ['pgn', 'username', 'fetchUser'] as const;
 function saveSession() {
   try {
-    const data: Record<string, string> = { source: ($('source') as HTMLSelectElement).value };
+    const data: Record<string, string> = { source };
     for (const k of SAVE_KEYS) data[k] = ($(k) as HTMLInputElement | HTMLTextAreaElement).value;
     localStorage.setItem('chesscoach', JSON.stringify(data));
   } catch {
@@ -123,13 +142,13 @@ function restoreSession() {
     if (!raw) return;
     const data = JSON.parse(raw) as Record<string, string>;
     for (const k of SAVE_KEYS) if (data[k] != null) ($(k) as HTMLInputElement).value = data[k];
-    if (data.source) ($('source') as HTMLSelectElement).value = data.source;
+    if (data.source === 'lichess' || data.source === 'chesscom') setSource(data.source);
   } catch {
     /* ignore */
   }
 }
 restoreSession();
-['pgn', 'username', 'fetchUser', 'source'].forEach((id) =>
+['pgn', 'username', 'fetchUser'].forEach((id) =>
   $(id).addEventListener('input', saveSession),
 );
 
@@ -414,12 +433,12 @@ function renderReport(r: Report, skipped: number) {
 $('analyzeAll').addEventListener('click', analyzeAll);
 
 $('fetchGames').addEventListener('click', async () => {
-  const src = ($('source') as HTMLSelectElement).value;
   const user = ($('fetchUser') as HTMLInputElement).value.trim();
   if (!user) return;
   $('fetchStatus').textContent = 'fetching...';
   try {
-    const pgn = src === 'lichess' ? await fetchLichess(user, 10) : await fetchChessCom(user, 10);
+    const pgn =
+      source === 'lichess' ? await fetchLichess(user, 10) : await fetchChessCom(user, 10);
     ($('pgn') as HTMLTextAreaElement).value = pgn;
     ($('username') as HTMLInputElement).value = user; // target this player in Analyze all
     $('fetchStatus').textContent = pgn ? 'loaded, now click Analyze all games' : 'no games found';

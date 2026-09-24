@@ -56,20 +56,24 @@
           Import or paste games, analyze them move by move, and drill the mistakes you find.
           Drills appear here once you have analyzed at least one game.
         </p>
-        <div class="controls">
-          <select id="source">
-            <option value="lichess">Lichess</option>
-            <option value="chesscom">Chess.com</option>
-          </select>
-          <input id="fetchUser" placeholder="Username to import" />
-          <button id="fetchGames" class="primary">Fetch games</button>
-          <span id="fetchStatus"></span>
+        <div class="import-panel">
+          <h2 class="panel-title">Bring in a game</h2>
+          <div class="controls">
+            <button id="srcLichess" class="src-btn is-active">Lichess</button>
+            <button id="srcChesscom" class="src-btn">Chess.com</button>
+            <input id="fetchUser" placeholder="Username to import" />
+            <button id="fetchGames" class="primary">Fetch games</button>
+            <span id="fetchStatus"></span>
+          </div>
         </div>
-        <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
-        <div class="controls">
-          <button id="load">Load</button>
-          <button id="analyze" class="primary">Analyze</button>
-          <span id="status"></span>
+        <div class="paste-panel">
+          <h2 class="panel-title">Or paste a PGN</h2>
+          <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
+          <div class="controls">
+            <button id="load">Load</button>
+            <button id="analyze" class="primary">Analyze</button>
+            <span id="status"></span>
+          </div>
         </div>
         <div class="controls">
           <input id="username" placeholder="Your username (as in the PGN)" />
