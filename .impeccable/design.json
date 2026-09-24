@@ -174,5 +174,76 @@
     ]
   },
   "components": [],
-  "narrative": {}
+  "narrative": {
+    "northStar": "The Analysis Room",
+    "overview": "Chess Coach is a dark room with a lit board in it. The board is the subject and everything else recedes: a warm near-black field (#121816), a lamp gradient above the board, a vignette at the edges, and a film grain over all of it that kills gradient banding and gives the room texture. The visitor arrives having just lost a game. A bright interface would make that feel like an inspection; a dark one feels like sitting down at a table afterwards.\n\nThe engine is made visible rather than hidden. While it searches it reports its depth, node count, and nodes per second as a mono readout under the board. The eval bar is the board's instrument and wears the board's colors. When an analysis completes, the eval graph draws itself left to right and the verdict flares pop in staggered behind it. That reveal is the one authored motion moment in the product, and it happens once per analysis.\n\nThe coaching does not live in a panel beside the game. It lives inside the notation: the score runs as a single typographic column, and under any move that cost something, the explanation is set in a reading serif behind a rule in that move's verdict color. Good moves are silent. This is what a coach's markup actually looks like, and it is why the product's best asset stopped being a grey box in a sidebar.",
+    "keyCharacteristics": [
+      "A dark warm room, a lit board, and light rather than hue as the interface's voice.",
+      "Fraunces for display and for reading, Inter for the interface, mono for notation.",
+      "Verdict color is the only saturated hue anywhere.",
+      "Panels are lit edges, never drop shadows. On a dark field a shadow reads as a hole.",
+      "The engine's work is shown, not hidden."
+    ],
+    "rules": [
+      {
+        "name": "The Lamp Never Judges Rule",
+        "body": "Lamp Gold marks structure and state: where you are, what is focused, what the primary action is, and where the eval line runs. The verdict scale marks how good a move was. Lamp never appears on a move, a badge, or a graph dot. Verdict never appears on a control, a tab, or a focus ring. Lamp is always pale; verdict is always saturated. That saturation gap is what keeps Lamp and Inaccuracy apart, since they share a hue family.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rationed Light Rule",
+        "body": "Lamp covers under 8% of any screen. In a dark room a pale warm tone is extremely loud. If two Lamp elements compete for attention in one region, one of them is decoration and should be Bright instead.",
+        "section": "colors"
+      },
+      {
+        "name": "The Board Owns Its Own Colors Rule",
+        "body": "Board Light and Board Dark appear on the board and the eval bar. Painting UI chrome in them turns the room into a theme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Anything that counts or changes in place (clocks, evaluations, node counts, move indices, drill progress) uses `font-variant-numeric: tabular-nums`. A clock that reflows every second is a defect.",
+        "section": "typography"
+      },
+      {
+        "name": "The Notation Is Not Decoration Rule",
+        "body": "Monospace is reserved for SAN, FEN, clocks, eval values, and the engine readout. Never for headings, buttons, or prose.",
+        "section": "typography"
+      },
+      {
+        "name": "The Board Never Shrinks Below Its Squares Rule",
+        "body": "The board keeps a 1:1 aspect ratio and never drops below 280px. If the viewport cannot hold the board and the score column, the score column moves below the board. It never squeezes the board.",
+        "section": "layout"
+      },
+      {
+        "name": "The Lit Edge, Not The Dropped Shadow Rule",
+        "body": "Panels get `border-top: 1px solid var(--edge-light)` and no `box-shadow`. A shadow under a panel on this field is a hole, not a lift.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Elevation Step Rule",
+        "body": "A surface is Room or Raised. There is no third tone. Stacking more contrast to signal more importance is how a layout stops having a hierarchy.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Lamp Gold under 8% of any screen, on primary actions, active navigation, focus, links, and the eval line only.",
+      "Do use the verdict scale for move quality only, in both the score column and the eval graph, so the two always agree.",
+      "Do build depth with the Raised tone and a lit top edge.",
+      "Do put `tabular-nums` on every clock, evaluation, node count, and counter.",
+      "Do keep the annotation column at 64ch and set it in Fraunces. It is the product.",
+      "Do give every interactive element the Lamp focus ring.",
+      "Do honor `prefers-reduced-motion`: no hero loop, no graph draw-on, no stagger."
+    ],
+    "donts": [
+      "Don't put a `box-shadow` under a panel. On this field it reads as a hole, not a lift.",
+      "Don't paint UI chrome in the board's colors.",
+      "Don't add a second accent, and never bring back the old blue (#4a86e8) or the previous world's felt green (#3f5f4a).",
+      "Don't badge good moves. Only inaccuracy, mistake, and blunder are annotated.",
+      "Don't use pure black for text, shadows on surfaces, or fills. The room is warm.",
+      "Don't use monospace for headings, buttons, or prose.",
+      "Don't animate `left`, `width`, `height`, or `margin` for motion that could use `transform`. The eval bar's height is the one sanctioned exception, because it is a 14px-wide instrument and the value it shows is the height.",
+      "Don't invent a rating. Strength numbers come from the gauntlet or read \"unrated\"."
+    ]
+  }
 }
