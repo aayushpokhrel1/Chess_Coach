@@ -57,14 +57,19 @@
 }
 
 /* Board squares belong to the room. cburnett pieces are unchanged. */
-cg-board {
+/* Chessground paints the checkerboard on cg-board itself, as a base color plus
+   an embedded SVG for the dark squares, so there are no per-square elements to
+   target. Drawing it with gradients instead keeps both colors bound to :root. */
+.cg-wrap cg-board {
   background-color: var(--board-light);
-}
-cg-board square.light {
-  background-color: var(--board-light);
-}
-cg-board square.dark {
-  background-color: var(--board-dark);
+  background-image: conic-gradient(
+    var(--board-dark) 0 25%,
+    transparent 0 50%,
+    var(--board-dark) 0 75%,
+    transparent 0
+  );
+  background-size: 25% 25%;
+  background-position: 0 0;
 }
 .cg-wrap {
   box-shadow: var(--shadow-board);
