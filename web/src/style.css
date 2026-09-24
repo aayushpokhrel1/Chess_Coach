@@ -283,6 +283,75 @@ textarea:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+   The custom dropdown
+   --------------------------------------------------------------------------- */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 9rem;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.dropdown-button::after {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: translateY(-0.15rem) rotate(45deg);
+  transition: transform var(--t-state) var(--ease);
+}
+
+.dropdown.is-open .dropdown-button::after {
+  transform: translateY(0.1rem) rotate(225deg);
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 4;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.dropdown-option {
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdown-option:hover {
+  color: var(--text-bright);
+}
+
+/* The active option is the keyboard cursor, not the selection. */
+.dropdown-option.ds-active {
+  background: var(--room);
+  color: var(--text-bright);
+}
+
+.dropdown-option.is-selected {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
    The hero
    --------------------------------------------------------------------------- */
 .hero {
