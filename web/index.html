@@ -21,7 +21,7 @@
           </select>
           <label class="field">Level <select id="playLevel"></select></label>
           <label class="field">Time <select id="playTime"></select></label>
-          <button id="newGame">New game</button>
+          <button id="newGame" class="primary">New game</button>
           <button id="resign" disabled>Resign</button>
           <button id="analyzeGame" disabled>Analyze this game</button>
         </div>
@@ -49,18 +49,18 @@
             <option value="chesscom">Chess.com</option>
           </select>
           <input id="fetchUser" placeholder="Username to import" />
-          <button id="fetchGames">Fetch games</button>
+          <button id="fetchGames" class="primary">Fetch games</button>
           <span id="fetchStatus"></span>
         </div>
         <textarea id="pgn" rows="4" placeholder="Paste PGN here"></textarea>
         <div class="controls">
           <button id="load">Load</button>
-          <button id="analyze">Analyze</button>
+          <button id="analyze" class="primary">Analyze</button>
           <span id="status"></span>
         </div>
         <div class="controls">
           <input id="username" placeholder="Your username (as in the PGN)" />
-          <button id="analyzeAll">Analyze all games</button>
+          <button id="analyzeAll" class="primary">Analyze all games</button>
           <button id="startDrills" hidden>Start drills</button>
           <span id="reportStatus"></span>
         </div>
@@ -77,7 +77,7 @@
           <p id="drillFeedback"></p>
           <div class="controls">
             <button id="drillAnswer">Show answer</button>
-            <button id="drillNext">Next</button>
+            <button id="drillNext" class="primary">Next</button>
             <span id="drillProgress"></span>
           </div>
         </div>

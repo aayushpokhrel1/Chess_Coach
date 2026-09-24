@@ -167,6 +167,8 @@ docs/     # design spec and per-milestone implementation plans
 
 ## Docs
 
+- Product truth (users, purpose, constraints): [PRODUCT.md](PRODUCT.md)
+- Visual design system ("The Club Room"): [DESIGN.md](DESIGN.md)
 - Design spec: [docs/superpowers/specs/2026-08-27-chess-coach-design.md](docs/superpowers/specs/2026-08-27-chess-coach-design.md)
 - Plans: [M1 board + FEN](docs/superpowers/plans/2026-08-27-engine-m1-board-representation.md),
   [M2 move generation + perft](docs/superpowers/plans/2026-08-29-engine-m2-move-generation.md),

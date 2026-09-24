@@ -1,27 +1,276 @@
+@import '@fontsource-variable/inter';
+
+/* ---------------------------------------------------------------------------
+   Chess Coach design tokens. See DESIGN.md ("The Club Room") at the repo root.
+   --------------------------------------------------------------------------- */
+:root {
+  /* Primary: the one brand voice. */
+  --felt: #3f5f4a;
+  --felt-deep: #334e3c;
+  --felt-wash: #e7ede9;
+
+  /* Secondary: the board owns the wood. UI chrome never uses these. */
+  --board-light: #f0d9b5;
+  --board-dark: #b58863;
+
+  /* Tertiary: move quality, and nothing else. */
+  --verdict-best: #1d7a44;
+  --verdict-inaccuracy: #8f6200;
+  --verdict-mistake: #c2410c;
+  --verdict-blunder: #b3261e;
+
+  /* Neutral. */
+  --page: #faf6f0;
+  --surface: #ffffff;
+  --surface-sunken: #f3ece2;
+  --hairline: #e3d9cc;
+  --ink: #23201c;
+  --ink-muted: #6b6259;
+  --ink-faint: #9a9086;
+
+  --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  --shadow-rest: 0 1px 2px rgba(35, 32, 28, 0.04), 0 2px 8px rgba(35, 32, 28, 0.06);
+  --shadow-raised: 0 2px 4px rgba(35, 32, 28, 0.06), 0 8px 20px rgba(35, 32, 28, 0.1);
+  --focus-ring: 0 0 0 3px rgba(63, 95, 74, 0.28);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-state: 150ms;
+}
+
+/* ---------------------------------------------------------------------------
+   Page
+   --------------------------------------------------------------------------- */
 body {
-  font-family: system-ui, sans-serif;
-  margin: 2rem;
-  color: #222;
-  background: #fafafa; /* explicit: without it the app's dark pane shows through and #222 text is invisible */
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0;
+  color: var(--ink);
+  background: var(--page); /* explicit: without it the app's dark pane shows through */
+  -webkit-text-size-adjust: 100%;
+}
+
+#app {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem;
+}
+
+/* Browser surfaces that ship with no design system of their own. */
+::selection {
+  background: var(--felt-wash);
+  color: var(--felt-deep);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+a {
+  color: var(--felt);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--felt-deep);
+}
+
+.moves::-webkit-scrollbar {
+  width: 10px;
+}
+.moves::-webkit-scrollbar-track {
+  background: transparent;
+}
+.moves::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 999px;
+  border: 3px solid var(--surface);
+}
+.moves::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-faint);
+}
+.moves {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Controls
+   --------------------------------------------------------------------------- */
+button,
+select,
+input,
+textarea {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+button,
+select {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease),
+    border-color var(--t-state) var(--ease);
+}
+
+button:hover:not(:disabled),
+select:hover {
+  background: var(--felt-wash);
+  color: var(--felt-deep);
+  border-color: var(--felt-wash);
+}
+
+button:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+/* The one action that advances the task in a region. */
+button.primary {
+  background: var(--felt);
+  color: var(--page);
+  border-color: var(--felt);
+}
+button.primary:hover:not(:disabled) {
+  background: var(--felt-deep);
+  border-color: var(--felt-deep);
+  color: var(--page);
+}
+button.primary:disabled {
+  background: var(--surface);
+  border-color: var(--hairline);
+  color: var(--ink-faint);
+}
+
+input,
+textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  transition: border-color var(--t-state) var(--ease);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  border-color: var(--felt);
 }
 
 #pgn {
-  width: 480px;
+  width: 100%;
+  max-width: 640px;
   display: block;
-  font-family: monospace;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  resize: vertical;
 }
 
 .controls {
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
-.controls #status {
-  color: #666;
-  font-size: 0.9rem;
+
+.controls #status,
+#fetchStatus,
+#reportStatus,
+#drillProgress {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.field select {
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+   Tabs
+   --------------------------------------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: none;
+  padding: 0.5rem 1rem;
+  color: var(--ink-muted);
+  margin-bottom: -1px;
+}
+
+.tab:hover:not(.active) {
+  color: var(--ink);
+  background: var(--felt-wash);
+  border-color: transparent;
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  border-bottom-color: var(--felt);
+}
+
+.tab-intro {
+  color: var(--ink-muted);
+  margin: 0 0 1rem;
+  max-width: 70ch;
+}
+
+/* ---------------------------------------------------------------------------
+   Board and its instruments
+   --------------------------------------------------------------------------- */
 .layout {
   display: flex;
   gap: 1.5rem;
@@ -31,6 +280,7 @@ body {
 .board {
   width: 480px;
   height: 480px;
+  aspect-ratio: 1;
 }
 
 .board-row {
@@ -38,93 +288,160 @@ body {
   gap: 8px;
   align-items: stretch;
 }
+
 .evalbar {
   width: 14px;
-  height: 480px;
-  background: #333;
+  background: var(--board-dark);
   position: relative;
-  border-radius: 3px;
+  border-radius: var(--r-md);
   overflow: hidden;
 }
+
 .evalfill {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #eee;
+  background: var(--board-light);
   height: 50%;
-  transition: height 0.2s;
+  transition: height 200ms var(--ease);
 }
 
-#nav {
-  margin-top: 0.5rem;
+#nav,
+#playNav {
+  margin-top: 0.75rem;
   display: flex;
   gap: 0.75rem;
   align-items: center;
 }
 
+#playNav {
+  justify-content: center;
+  gap: 1rem;
+}
+
+#ply,
+#playPos {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  min-width: 4rem;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards
+   --------------------------------------------------------------------------- */
+.side,
+.report,
+.drill,
+.evalgraph {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-rest);
+}
+
 .side {
   width: 320px;
-}
-
-.explain {
-  min-height: 3rem;
-  padding: 0.75rem;
-  background: #f4f4f4;
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
-}
-
-.moves {
-  max-height: 420px;
-  overflow-y: auto;
-  padding-left: 2rem;
-  margin: 0;
-}
-.moves li {
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
-}
-.moves li:hover {
-  background: #eee;
-}
-.moves li.active {
-  background: #dde7ff;
-}
-.moves .san {
-  font-family: monospace;
-}
-
-.badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-.q-best,
-.q-good {
-  color: #393;
-}
-.q-inaccuracy {
-  color: #c90;
-}
-.q-mistake {
-  color: #d60;
-}
-.q-blunder {
-  color: #b00;
+  padding: 1rem;
 }
 
 .report {
   margin-top: 1rem;
   max-width: 640px;
+  padding: 1.5rem;
 }
-.report .headline {
-  font-size: 1.1rem;
+.report:empty {
+  display: none;
+}
+
+.drill {
+  margin-top: 1rem;
+  max-width: 480px;
+  padding: 1rem;
+}
+
+/* The explanation is a sunken well: a container for engine output, not a card. */
+.explain {
+  min-height: 3rem;
+  padding: 0.75rem;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  margin-bottom: 0.75rem;
+  line-height: 1.55;
+  max-width: 70ch;
+}
+
+/* ---------------------------------------------------------------------------
+   Move list
+   --------------------------------------------------------------------------- */
+.moves {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-left: 2rem;
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.moves li {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  border-left: 1px solid transparent;
+  transition: background var(--t-state) var(--ease);
+}
+.moves li:hover {
+  background: var(--felt-wash);
+}
+.moves li.active {
+  background: var(--felt-wash);
+  border-left-color: var(--felt);
+}
+
+.moves .san {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.badge {
+  font-size: 0.8rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--r-sm);
+  padding: 1px 4px;
+}
+.q-best,
+.q-good {
+  color: var(--verdict-best);
+}
+.q-inaccuracy {
+  color: var(--verdict-inaccuracy);
+}
+.q-mistake {
+  color: var(--verdict-mistake);
+}
+.q-blunder {
+  color: var(--verdict-blunder);
+}
+
+/* ---------------------------------------------------------------------------
+   Report
+   --------------------------------------------------------------------------- */
+.report .headline {
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+  max-width: 60ch;
 }
 .report .tables {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
 }
 .report table {
@@ -133,164 +450,173 @@ body {
 .report caption {
   text-align: left;
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.5rem;
 }
 .report td {
-  padding: 2px 12px 2px 0;
+  padding: 3px 16px 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+.report td:last-child {
+  color: var(--ink-muted);
 }
 
-.drill {
-  margin-top: 1rem;
-  max-width: 480px;
-}
+/* ---------------------------------------------------------------------------
+   Drills
+   --------------------------------------------------------------------------- */
 .drill #drillPrompt {
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
 }
 .drill #drillFeedback {
   min-height: 1.4rem;
+  color: var(--ink-muted);
 }
 .promo {
   margin: 0.5rem 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .promo button {
-  margin-right: 4px;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: 0.35rem 0.6rem;
 }
 
-/* --- readable tidy pass --- */
-#app {
-  max-width: 900px;
-}
-h1 {
-  margin-bottom: 1rem;
-}
-button,
-select,
-input,
-textarea {
-  font: inherit;
-}
-button,
-select {
-  padding: 0.35rem 0.7rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-button:hover:not(:disabled) {
-  border-color: #888;
-}
-button:disabled {
-  color: #aaa;
-  cursor: default;
-}
-input {
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-.field {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: #555;
-  font-size: 0.9rem;
-}
-.field select {
-  cursor: pointer;
-}
-
-/* --- tabs --- */
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  border-bottom: 2px solid #e0e0e0;
-  margin-bottom: 1.25rem;
-}
-.tab {
-  border: none;
-  border-bottom: 3px solid transparent;
-  border-radius: 6px 6px 0 0;
-  background: none;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  color: #777;
-  margin-bottom: -2px;
-}
-.tab:hover:not(.active) {
-  color: #444;
-  background: #f0f0f0;
-}
-.tab.active {
-  color: #1a1a1a;
-  border-bottom-color: #4a86e8;
-  font-weight: 600;
-}
-.tab-intro {
-  color: #666;
-  margin: 0 0 1rem;
-  max-width: 640px;
-}
-
-/* --- play the engine --- */
-.play .controls {
-  flex-wrap: wrap;
-}
-#playNav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-#playPos {
-  font-family: ui-monospace, monospace;
-  color: #666;
-  min-width: 4rem;
-  text-align: center;
-}
+/* ---------------------------------------------------------------------------
+   Play the engine
+   --------------------------------------------------------------------------- */
 .play-status {
   min-height: 1.4rem;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 0.75rem;
   font-weight: 600;
-  color: #444;
+  color: var(--ink-muted);
 }
+
 .play-board {
   width: 480px;
+  max-width: 100%;
 }
+
 .clock {
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 1.4rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   text-align: right;
   min-height: 1.6rem;
   padding: 0.1rem 0.4rem;
-  color: #333;
+  color: var(--ink);
 }
 
-/* --- eval graph (chess.com-style game review) --- */
+/* ---------------------------------------------------------------------------
+   Eval graph
+   --------------------------------------------------------------------------- */
 .evalgraph {
   width: 100%;
   height: 120px;
-  margin: 0.5rem 0 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #5b5b5b; /* Black's territory (above the eval line) */
+  margin: 0.5rem 0 1rem;
+  /* Black's territory, above the eval line. A warm mid-tone rather than near-black:
+     the felt line and cursor cross both fields and have to stay legible on each. */
+  background: #b9ae9e;
   overflow: hidden;
 }
-.ga-svg { width: 100%; height: 100%; display: block; cursor: pointer; }
-.ga-white { fill: #f0f0f0; }               /* White's territory under the line */
-.ga-mid { stroke: #999; stroke-width: 1; stroke-dasharray: 3 3; }
-.ga-line { fill: none; stroke: #4a90d9; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-.ga-dot { stroke: #fff; stroke-width: 1; cursor: pointer; }
-.ga-dot.q-inaccuracy { fill: #c90; }
-.ga-dot.q-mistake { fill: #d60; }
-.ga-dot.q-blunder { fill: #b00; }
-.ga-cursor { stroke: #111; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.ga-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+}
+.ga-white {
+  fill: var(--page);
+} /* White's territory under the line */
+.ga-mid {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.35;
+}
+.ga-line {
+  fill: none;
+  stroke: var(--felt);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.ga-dot {
+  stroke: #fff;
+  stroke-width: 1;
+  cursor: pointer;
+}
+.ga-dot.q-inaccuracy {
+  fill: var(--verdict-inaccuracy);
+}
+.ga-dot.q-mistake {
+  fill: var(--verdict-mistake);
+}
+.ga-dot.q-blunder {
+  fill: var(--verdict-blunder);
+}
+.ga-cursor {
+  stroke: var(--felt);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
 .bestline {
-  font-size: 0.85rem;
-  color: #555;
-  margin: 0.25rem 0 0.5rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin: 0.25rem 0 0.75rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive: the side column moves below the board; the board never squeezes.
+   --------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .layout {
+    flex-wrap: wrap;
+  }
+  .board,
+  .play-board {
+    width: min(480px, 100vw - 3rem - 22px);
+  }
+  .board {
+    height: auto;
+  }
+  .side {
+    width: 100%;
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 560px) {
+  #app {
+    padding: 1.5rem 1rem 3rem;
+  }
+  .tabs {
+    gap: 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 0.5rem 0.5rem;
+    text-align: center;
+  }
+  .report .tables {
+    gap: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 1ms !important;
+  }
 }

@@ -89,13 +89,10 @@ function buildMoveList() {
     const li = document.createElement('li');
     const a = analyses[i];
     let badge = '';
-    if (a) {
-      const loss =
-        a.quality === 'best' || a.quality === 'good'
-          ? ''
-          : a.cpLoss > 9999
-            ? ' (mate)'
-            : ` -${a.cpLoss}`;
+    // Only mistakes earn a badge. A "good" tag on every second move is noise,
+    // and it buries the three moves that actually decided the game.
+    if (a && a.quality !== 'best' && a.quality !== 'good') {
+      const loss = a.cpLoss > 9999 ? ' (mate)' : ` -${a.cpLoss}`;
       badge = ` <span class="badge q-${a.quality}">${a.quality}${loss}</span>`;
     }
     li.innerHTML = `<span class="san">${m.san}</span>${badge}`;
