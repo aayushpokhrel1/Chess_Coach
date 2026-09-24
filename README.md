@@ -37,7 +37,7 @@ opponent you play.
 ## Two tracks, one seam
 
 - **Engine (C++):** board representation, legal move generation, search, evaluation.
-  Compiles to WebAssembly later for the browser.
+  Compiles to WebAssembly for the browser.
 - **Coach (web):** import your games, flag blunders, explain them in plain language,
   drill your own mistakes.
 
@@ -49,18 +49,18 @@ own engine as it matures. Neither track blocks the other.
 
 Engine milestones (correctness before speed):
 
-- [x] **M0. Toolchain** — native C++ build on Windows (MSYS2 UCRT64, CMake, Ninja, doctest).
-- [x] **M1. Board + FEN** — 64-square board, parse and generate FEN, round-trip tested.
-- [x] **M2. Legal move generation + perft** — all pieces, castling, en passant,
+- [x] **M0. Toolchain**: native C++ build on Windows (MSYS2 UCRT64, CMake, Ninja, doctest).
+- [x] **M1. Board + FEN**: 64-square board, parse and generate FEN, round-trip tested.
+- [x] **M2. Legal move generation + perft**: all pieces, castling, en passant,
   promotion; `perft` matches published counts (start, Kiwipete, CPW Position 3).
-- [x] **M3. Make / unmake** — in-place move/undo with a small undo record,
+- [x] **M3. Make / unmake**: in-place move/undo with a small undo record,
   replacing copy-make on the perft hot path; perft counts unchanged.
-- [x] **M4. Evaluation v1** — material, then piece-square tables (side-to-move perspective).
-- [x] **M5. Search** — negamax with alpha-beta pruning and iterative deepening; stops
+- [x] **M4. Evaluation v1**: material, then piece-square tables (side-to-move perspective).
+- [x] **M5. Search**: negamax with alpha-beta pruning and iterative deepening; stops
   hanging a queen, finds mate in one, then mate in two.
-- [x] **M6. UCI interface** — `chess_engine` executable speaks UCI (`position`, `go`,
+- [x] **M6. UCI interface**: `chess_engine` executable speaks UCI (`position`, `go`,
   `bestmove`) with real time management; plays a full game in a GUI.
-- [x] **M7a. Quiescence + move ordering** — MVV-LVA capture ordering and a quiescence
+- [x] **M7a. Quiescence + move ordering**: MVV-LVA capture ordering and a quiescence
   search (with check evasions) that fixes the horizon-effect blunders; the engine now
   beats a handicapped Stockfish it used to lose to. The search also returns a principal
   variation and emits a full UCI `info` line.
@@ -96,18 +96,18 @@ Engine milestones (correctness before speed):
 
 Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI seam):
 
-- [x] **C1. Import, analyze, explain** — paste a PGN, step through it on a board, analyze
+- [x] **C1. Import, analyze, explain**: paste a PGN, step through it on a board, analyze
   every move with Stockfish (in a Web Worker), classify each by eval swing
   (best / good / inaccuracy / mistake / blunder), and explain the mistakes in beginner
   language derived from the engine's own line.
-- [x] **C2. Pattern detection** — paste several games, give your username, and get your
+- [x] **C2. Pattern detection**: paste several games, give your username, and get your
   mistakes and blunders broken down by phase (opening/middlegame/endgame) and category
   (hanging a piece / missing a mate / missing a capture / other), with a headline insight.
-- [x] **C3. Drills** — replay your own mistake and blunder positions as puzzles on a
+- [x] **C3. Drills**: replay your own mistake and blunder positions as puzzles on a
   movable board; your move is graded live by Stockfish (any non-losing move solves it).
-- [x] **C4. Polish** — import games by username from Lichess and Chess.com, an eval bar
+- [x] **C4. Polish**: import games by username from Lichess and Chess.com, an eval bar
   beside the board, remembered sessions (localStorage), and under-promotion in drills.
-- [x] **C5. Eval graph** — a chess.com-style evaluation graph across the game with blunder
+- [x] **C5. Eval graph**: a chess.com-style evaluation graph across the game with blunder
   markers and the engine's best line at each point.
 - [x] **C6. The Analysis Room**: a full visual redesign, replacing a plain page of form
   controls with a dark room built around a lit board. The landing viewport autoplays a

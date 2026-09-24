@@ -275,26 +275,26 @@ cursor line is `text-bright`.
 
 New:
 
-- `web/src/hero.ts` — the landing loop: a hardcoded miniature PGN, move scheduling, reduced
+- `web/src/hero.ts` holds the landing loop: a hardcoded miniature PGN, move scheduling, reduced
   motion handling, and teardown on interaction.
-- `web/src/controls.ts` — the custom dropdown, segmented control, and level picker.
+- `web/src/controls.ts` holds the custom dropdown, segmented control, and level picker.
 
 Rewritten:
 
-- `web/index.html` — hero section, sticky tab bar, restructured play and analyze surfaces,
+- `web/index.html`: hero section, sticky tab bar, restructured play and analyze surfaces,
   the score column, the readout strip, the grain and vignette overlays.
-- `web/src/style.css` — the full token layer and every component.
+- `web/src/style.css`: the full token layer and every component.
 
 Touched:
 
-- `web/src/main.ts` — score column rendering (annotations grouped under their moves),
+- `web/src/main.ts`: score column rendering (annotations grouped under their moves),
   readout wiring, graph draw-on trigger, control instantiation.
-- `web/src/board.ts` — square color override for the recolored board.
-- `web/src/play.ts` — readout data from the UCI info line, level picker integration.
+- `web/src/board.ts`: square color override for the recolored board.
+- `web/src/play.ts`: readout data from the UCI info line, level picker integration.
 
 Replaced:
 
-- `DESIGN.md` and `.impeccable/design.json` — this is a redesign, so the previous Club Room
+- `DESIGN.md` and `.impeccable/design.json`: this is a redesign, so the previous Club Room
   world is replaced rather than amended.
 
 Added dependency: `@fontsource-variable/fraunces`.
