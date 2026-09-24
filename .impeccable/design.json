@@ -4,282 +4,175 @@
   "title": "Design System: Chess Coach",
   "extensions": {
     "colorMeta": {
-      "felt": {
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#0b0f0e",
+        "tonalRamp": ["#040504", "#070a09", "#0b0f0e", "#1b211f", "#2b3330", "#3b4541", "#4b5752", "#5b6963"]
+      },
+      "room": {
+        "role": "neutral",
+        "displayName": "Room",
+        "canonical": "#121816",
+        "tonalRamp": ["#060807", "#0a0e0d", "#121816", "#222a27", "#323c38", "#424e49", "#52605a", "#62726b"]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised",
+        "canonical": "#1a2220",
+        "tonalRamp": ["#080b0a", "#0d1211", "#1a2220", "#2a3431", "#3a4642", "#4a5853", "#5a6a64", "#6a7c75"]
+      },
+      "text-bright": {
+        "role": "neutral",
+        "displayName": "Bright",
+        "canonical": "#f2ece1",
+        "tonalRamp": ["#3a352c", "#5b554a", "#7c7568", "#9d9587", "#beb5a6", "#d8d1c4", "#f2ece1", "#f8f4ed"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "canonical": "#cfc8bc",
+        "tonalRamp": ["#2f2c26", "#4a463d", "#656056", "#807a6e", "#9d9689", "#b6afa3", "#cfc8bc", "#e0dbd2"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#8e877c",
+        "tonalRamp": ["#1c1a17", "#2e2b26", "#403c35", "#565148", "#6e685f", "#8e877c", "#b3ada3", "#d6d2cb"]
+      },
+      "text-faint": {
+        "role": "neutral",
+        "displayName": "Faint",
+        "canonical": "#6e675e",
+        "tonalRamp": ["#131110", "#211f1c", "#302d29", "#413d38", "#524d47", "#6e675e", "#9c958b", "#c9c4bc"]
+      },
+      "lamp": {
         "role": "primary",
-        "displayName": "Table Felt",
-        "canonical": "#3f5f4a",
-        "tonalRamp": ["#0e1811", "#1a2b20", "#26402f", "#334e3c", "#3f5f4a", "#6d8a78", "#a3b8ac", "#dde6e0"]
+        "displayName": "Lamp Gold",
+        "canonical": "#f0d9a8",
+        "tonalRamp": ["#3a2f18", "#5c4b26", "#7e6734", "#a08342", "#c2a050", "#d9bc7c", "#f0d9a8", "#f7ecd4"]
       },
-      "felt-deep": {
+      "lamp-dim": {
         "role": "primary",
-        "displayName": "Deep Felt",
-        "canonical": "#334e3c",
-        "tonalRamp": ["#0b130e", "#15221a", "#203526", "#2a4231", "#334e3c", "#5f7d6a", "#9ab0a3", "#d8e3dc"]
-      },
-      "felt-wash": {
-        "role": "primary",
-        "displayName": "Felt Wash",
-        "canonical": "#e7ede9",
-        "tonalRamp": ["#2b342e", "#3f4d44", "#5a6b60", "#7d8c83", "#a4b0a9", "#c6cfc9", "#e7ede9", "#f5f8f6"]
-      },
-      "page": {
-        "role": "neutral",
-        "displayName": "Paper",
-        "canonical": "#faf6f0",
-        "tonalRamp": ["#2b2721", "#443e35", "#61594d", "#867d6f", "#b0a698", "#d6cdc0", "#eee7dd", "#faf6f0"]
-      },
-      "surface": {
-        "role": "neutral",
-        "displayName": "Card",
-        "canonical": "#ffffff",
-        "tonalRamp": ["#262626", "#3d3d3d", "#5c5c5c", "#828282", "#adadad", "#d4d4d4", "#ededed", "#ffffff"]
-      },
-      "surface-sunken": {
-        "role": "neutral",
-        "displayName": "Sunken Paper",
-        "canonical": "#f3ece2",
-        "tonalRamp": ["#2a251e", "#423a30", "#5f5445", "#847661", "#ae9f87", "#d3c6b1", "#e9dfd1", "#f3ece2"]
-      },
-      "hairline": {
-        "role": "neutral",
-        "displayName": "Hairline",
-        "canonical": "#e3d9cc",
-        "tonalRamp": ["#26211a", "#3d362b", "#584e3f", "#7c6f5a", "#a5977e", "#c9bca6", "#e3d9cc", "#f2ece3"]
-      },
-      "ink": {
-        "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "#23201c",
-        "tonalRamp": ["#0b0a09", "#151310", "#23201c", "#3b362f", "#5c554a", "#857d70", "#b5aea3", "#e0dbd4"]
-      },
-      "ink-muted": {
-        "role": "neutral",
-        "displayName": "Muted Ink",
-        "canonical": "#6b6259",
-        "tonalRamp": ["#151311", "#24211d", "#3a352f", "#524b43", "#6b6259", "#948b81", "#bdb5ab", "#e4dfd9"]
-      },
-      "ink-faint": {
-        "role": "neutral",
-        "displayName": "Faint Ink",
-        "canonical": "#9a9086",
-        "tonalRamp": ["#1d1a17", "#312d28", "#4a443c", "#665f55", "#847c72", "#9a9086", "#c3bcb4", "#e8e4df"]
+        "displayName": "Dim Lamp",
+        "canonical": "#d4bc89",
+        "tonalRamp": ["#332b1b", "#514429", "#6f5d38", "#8d7647", "#ab8f56", "#bfa66f", "#d4bc89", "#e5d6b7"]
       },
       "board-light": {
         "role": "secondary",
         "displayName": "Board Light",
-        "canonical": "#f0d9b5",
-        "tonalRamp": ["#2e2314", "#4a3922", "#6b5332", "#917146", "#b8955f", "#d7b98a", "#f0d9b5", "#f9ecd8"]
+        "canonical": "#b3bfb6",
+        "tonalRamp": ["#262d29", "#3a453f", "#4e5d55", "#62756b", "#7c8d84", "#97a69e", "#b3bfb6", "#d1d9d3"]
       },
       "board-dark": {
         "role": "secondary",
         "displayName": "Board Dark",
-        "canonical": "#b58863",
-        "tonalRamp": ["#241a11", "#3b2a1c", "#573e29", "#775638", "#9a7049", "#b58863", "#d0ae90", "#e9d5c1"]
+        "canonical": "#4a5a52",
+        "tonalRamp": ["#0f1311", "#181e1b", "#212926", "#2a3531", "#333f3a", "#4a5a52", "#7b8a83", "#acb6b1"]
       },
-      "verdict-best": {
+      "verdict-sound": {
         "role": "tertiary",
         "displayName": "Sound",
-        "canonical": "#1d7a44",
-        "tonalRamp": ["#05170c", "#0a2b17", "#104324", "#165e32", "#1d7a44", "#33a763", "#6fcb95", "#c3ebd4"]
+        "canonical": "#4ea87a",
+        "tonalRamp": ["#0f2219", "#183726", "#214c34", "#2a6142", "#337650", "#4ea87a", "#8ac5a6", "#c6e2d2"]
       },
       "verdict-inaccuracy": {
         "role": "tertiary",
         "displayName": "Inaccuracy",
-        "canonical": "#8f6200",
-        "tonalRamp": ["#1a1200", "#2e2000", "#463000", "#634400", "#8f6200", "#bd8200", "#e0a92e", "#f4dca3"]
+        "canonical": "#d9a441",
+        "tonalRamp": ["#2c210d", "#463514", "#603f1c", "#7a5923", "#a37b31", "#d9a441", "#e7c37f", "#f3e1bd"]
       },
       "verdict-mistake": {
         "role": "tertiary",
         "displayName": "Mistake",
-        "canonical": "#c2410c",
-        "tonalRamp": ["#210b02", "#3a1304", "#561d06", "#7a2a08", "#c2410c", "#e2652b", "#f0966b", "#fbd6c2"]
+        "canonical": "#e07a3c",
+        "tonalRamp": ["#2e190c", "#492813", "#642f1a", "#7f4a21", "#b05f2e", "#e07a3c", "#eba77a", "#f5d3b8"]
       },
       "verdict-blunder": {
         "role": "tertiary",
         "displayName": "Blunder",
-        "canonical": "#b3261e",
-        "tonalRamp": ["#1f0705", "#360c09", "#4f120e", "#701a14", "#b3261e", "#d64a41", "#e88c86", "#f8cfcc"]
+        "canonical": "#e0524a",
+        "tonalRamp": ["#2e110f", "#491b18", "#642521", "#7f2f2a", "#b0403a", "#e0524a", "#eb8b85", "#f5c5c2"]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "The page title only. One per page." },
-      "headline": { "displayName": "Headline", "purpose": "Report headline insight, drill prompt, card titles." },
-      "title": { "displayName": "Title", "purpose": "Buttons, tabs, table captions, the play status line." },
-      "body": { "displayName": "Body", "purpose": "Explanations and prose. Capped at 65-75ch." },
-      "label": { "displayName": "Label", "purpose": "Verdict badges, field labels, secondary status." },
-      "notation": { "displayName": "Notation", "purpose": "SAN moves, clocks, eval numbers, best lines. Tabular figures." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "The hero headline. One per page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Panel titles, the report insight, the drill prompt."
+      },
+      "annotation": {
+        "displayName": "Annotation",
+        "purpose": "The coaching explanation inside the score. Capped at 64ch."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Buttons, tabs, table captions."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Interface prose."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Verdict labels, field labels, status."
+      },
+      "notation": {
+        "displayName": "Notation",
+        "purpose": "SAN moves, best lines, clocks, eval numbers."
+      },
+      "readout": {
+        "displayName": "Readout",
+        "purpose": "The engine's live search."
+      }
     },
     "shadows": [
       {
-        "name": "card-rest",
-        "value": "0 1px 2px rgba(35,32,28,0.04), 0 2px 8px rgba(35,32,28,0.06)",
-        "purpose": "Every panel at rest. Warm, not black, so it does not read as dirt on cream."
+        "name": "Board cast",
+        "value": "0 24px 60px rgba(0,0,0,0.55)",
+        "purpose": "Under every board. It is the one object in the room with real weight."
       },
       {
-        "name": "card-raised",
-        "value": "0 2px 4px rgba(35,32,28,0.06), 0 8px 20px rgba(35,32,28,0.10)",
-        "purpose": "Hover on an interactive card, and anything temporarily above the page."
+        "name": "Popover",
+        "value": "0 12px 32px rgba(0,0,0,0.5)",
+        "purpose": "The dropdown listbox, and anything floating."
       },
       {
-        "name": "focus-ring",
-        "value": "0 0 0 3px rgba(63,95,74,0.28)",
-        "purpose": "Keyboard focus on every interactive element. Never removed without a replacement."
+        "name": "Focus ring",
+        "value": "0 0 0 3px rgba(240,217,168,0.35)",
+        "purpose": "Every interactive element, never removed without a replacement."
       }
     ],
     "motion": [
       {
-        "name": "ease-standard",
-        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "purpose": "Default easing for state transitions."
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The default easing for every state change and for the eval graph's draw-on."
       },
       {
-        "name": "duration-state",
+        "name": "t-state",
         "value": "150ms",
-        "purpose": "Hover, focus, and color state changes on controls."
+        "purpose": "Hover, focus, and color state changes on controls, and the segmented control's indicator."
       },
       {
-        "name": "duration-instrument",
-        "value": "200ms",
+        "name": "t-piece",
+        "value": "240ms",
         "purpose": "The eval bar's fill height, so the swing is legible rather than instant."
+      },
+      {
+        "name": "t-draw",
+        "value": "700ms",
+        "purpose": "The eval graph drawing itself left to right, once per analysis."
       }
     ],
     "breakpoints": [
-      { "name": "stack", "value": "900px" },
+      { "name": "stack", "value": "1024px" },
       { "name": "phone", "value": "560px" }
     ]
   },
-  "components": [
-    {
-      "name": "Primary Button",
-      "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The one action that advances the task in a region: Analyze, Load, New game.",
-      "html": "<button class=\"ds-btn-primary\">Analyze</button>",
-      "css": ".ds-btn-primary { font: 600 1rem/1.4 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); background: var(--felt, #3f5f4a); color: var(--page, #faf6f0); border: 1px solid transparent; border-radius: var(--r-md, 8px); padding: 8px 16px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--felt-deep, #334e3c); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(63,95,74,0.28); } .ds-btn-primary:active { background: var(--felt-deep, #334e3c); }"
-    },
-    {
-      "name": "Secondary Button",
-      "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "Every action that is not the primary one. Stays visible when disabled.",
-      "html": "<button class=\"ds-btn-secondary\">Show answer</button> <button class=\"ds-btn-secondary\" disabled>Resign</button>",
-      "css": ".ds-btn-secondary { font: 600 1rem/1.4 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); background: var(--surface, #fff); color: var(--ink, #23201c); border: 1px solid var(--hairline, #e3d9cc); border-radius: var(--r-md, 8px); padding: 8px 16px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-secondary:hover:not(:disabled) { background: var(--felt-wash, #e7ede9); color: var(--felt-deep, #334e3c); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(63,95,74,0.28); } .ds-btn-secondary:disabled { color: var(--ink-faint, #9a9086); cursor: default; }"
-    },
-    {
-      "name": "Text Input",
-      "kind": "input",
-      "refersTo": "input-text",
-      "description": "Sunken well on paper. Says type here without a shadow.",
-      "html": "<input class=\"ds-input\" placeholder=\"Username to import\" />",
-      "css": ".ds-input { font: 400 0.95rem/1.55 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); background: var(--surface-sunken, #f3ece2); color: var(--ink, #23201c); border: 1px solid var(--hairline, #e3d9cc); border-radius: var(--r-md, 8px); padding: 8px 12px; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: var(--ink-faint, #9a9086); } .ds-input:focus-visible { outline: none; border-color: var(--felt, #3f5f4a); box-shadow: 0 0 0 3px rgba(63,95,74,0.28); }"
-    },
-    {
-      "name": "Tab Bar",
-      "kind": "nav",
-      "refersTo": "tab",
-      "description": "Two tabs, always both visible. The active one joins the card below it.",
-      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">Play the engine</button><button class=\"ds-tab\">Analyze &amp; drills</button></nav>",
-      "css": ".ds-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--hairline, #e3d9cc); } .ds-tab { font: 600 1rem/1.4 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); background: none; border: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; color: var(--ink-muted, #6b6259); padding: 8px 16px; margin-bottom: -1px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-tab:hover:not(.ds-tab-active) { background: var(--felt-wash, #e7ede9); color: var(--ink, #23201c); } .ds-tab-active { background: var(--surface, #fff); color: var(--ink, #23201c); border-bottom-color: var(--felt, #3f5f4a); } .ds-tab:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(63,95,74,0.28); }"
-    },
-    {
-      "name": "Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "Every functional region. Shadow is the edge; no border.",
-      "html": "<div class=\"ds-card\"><p class=\"ds-card-title\">You hung a piece three times</p><p class=\"ds-card-body\">Most of your losses start with a piece left undefended in the middlegame.</p></div>",
-      "css": ".ds-card { background: var(--surface, #fff); border-radius: var(--r-lg, 12px); padding: 16px; box-shadow: 0 1px 2px rgba(35,32,28,0.04), 0 2px 8px rgba(35,32,28,0.06); } .ds-card-title { font: 650 1.15rem/1.3 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); letter-spacing: -0.01em; color: var(--ink, #23201c); margin: 0 0 8px; } .ds-card-body { font: 400 0.95rem/1.55 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); color: var(--ink, #23201c); margin: 0; max-width: 70ch; }"
-    },
-    {
-      "name": "Move Row with Verdict Badge",
-      "kind": "custom",
-      "refersTo": "chip-verdict",
-      "description": "The dense scanned region. Only mistakes are badged; good moves stay silent.",
-      "html": "<ol class=\"ds-moves\"><li><span class=\"ds-san\">Nf3</span></li><li class=\"ds-move-active\"><span class=\"ds-san\">Qh5</span> <span class=\"ds-verdict ds-verdict-blunder\">blunder -4.2</span></li><li><span class=\"ds-san\">Nc6</span> <span class=\"ds-verdict ds-verdict-inaccuracy\">inaccuracy -0.6</span></li></ol>",
-      "css": ".ds-moves { list-style: decimal; padding-left: 32px; margin: 0; font: 400 0.95rem/1.4 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); } .ds-moves li { padding: 2px 4px; border-radius: var(--r-sm, 4px); border-left: 2px solid transparent; cursor: pointer; } .ds-moves li:hover { background: var(--felt-wash, #e7ede9); } .ds-move-active { background: var(--felt-wash, #e7ede9); border-left-color: var(--felt, #3f5f4a); } .ds-san { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 500; font-variant-numeric: tabular-nums; } .ds-verdict { font: 600 0.8rem/1.2 var(--font-sans, 'Inter Variable', Inter, system-ui, sans-serif); letter-spacing: 0.02em; border-radius: var(--r-sm, 4px); padding: 1px 4px; } .ds-verdict-inaccuracy { color: #8f6200; } .ds-verdict-mistake { color: #c2410c; } .ds-verdict-blunder { color: #b3261e; }"
-    },
-    {
-      "name": "Eval Bar",
-      "kind": "custom",
-      "description": "The board's instrument. Wears the board's colors, never the UI's.",
-      "html": "<div class=\"ds-evalbar\"><div class=\"ds-evalfill\"></div></div>",
-      "css": ".ds-evalbar { width: 14px; height: 200px; background: var(--board-dark, #b58863); border-radius: var(--r-md, 8px); position: relative; overflow: hidden; } .ds-evalfill { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: var(--board-light, #f0d9b5); transition: height 200ms cubic-bezier(0.4,0,0.2,1); }"
-    },
-    {
-      "name": "Clock",
-      "kind": "custom",
-      "description": "Tabular figures so the layout never reflows as it ticks.",
-      "html": "<div class=\"ds-clock\">4:07</div>",
-      "css": ".ds-clock { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink, #23201c); text-align: right; padding: 2px 6px; }"
-    }
-  ],
-  "narrative": {
-    "northStar": "The Club Room",
-    "overview": "Chess Coach looks like the table you sit down at after a game, not like an analytics product. The board is the classic wooden one every club and every online lobby already uses, so a beginner recognises it before they read a word. Around it, the room is warm paper (#faf6f0), and the only voice that belongs to the software is the green of table felt (#3f5f4a). Nothing shouts. The visitor has just lost a game and arrived slightly embarrassed; a loud interface would make that worse.\n\nThe system is warm, quiet, and dense with real information. Panels are white cards that sit on the paper with a soft shadow, because the visitor is working with several distinct objects at once: a board, a move list, an explanation, a graph, a drill. Cards make those objects separable at a glance without borders everywhere. Typography is a single humanist sans (Inter) doing all the talking, with monospace reserved for the things that are literally notation: moves, clocks, evaluations.\n\nColor is rationed hard. The felt marks structure and engine truth. A separate, saturated verdict scale (green through red) marks how good a move was, and it appears only on move quality. Those two families never trade jobs. Rejected outright: a dark analytics chrome, neon accents, the arbitrary blue that used to sit on the active tab, and any decorative gradient or glassmorphism.",
-    "keyCharacteristics": [
-      "Warm paper page, white cards, wooden board, green felt accent.",
-      "One typeface family; monospace only for real notation.",
-      "Verdict color is earned by the engine, never used for decoration.",
-      "Soft, warm, low-contrast shadows; no hard borders doing a card's job.",
-      "Generous line height and muted secondary text, because beginners read every word."
-    ],
-    "rules": [
-      {
-        "name": "The Felt Never Judges Rule",
-        "body": "Table Felt and the verdict scale are separate vocabularies. Felt marks where you are and what the engine is showing; verdict color marks how good a move was. A green button is a bug. A felt-colored blunder badge is a bug. Audit test: cover the board and ask of every colored element, \"is this navigation, or is this a grade?\"",
-        "section": "colors"
-      },
-      {
-        "name": "The Rationed Accent Rule",
-        "body": "Felt covers less than 10% of any screen. If two felt elements compete for attention in the same region, one of them is decoration and should be neutral.",
-        "section": "colors"
-      },
-      {
-        "name": "The Board Owns The Wood Rule",
-        "body": "Board Light and Board Dark appear on the board and the eval bar, and nowhere else. Extending the wood into the chrome turns the room into a theme.",
-        "section": "colors"
-      },
-      {
-        "name": "The Tabular Figures Rule",
-        "body": "Anything that counts or changes in place (clocks, evaluation numbers, move indices, drill progress) uses font-variant-numeric: tabular-nums. A clock that reflows every second is a defect.",
-        "section": "typography"
-      },
-      {
-        "name": "The Notation Is Not Decoration Rule",
-        "body": "Monospace is reserved for SAN, FEN, clocks, and eval values. Never for headings, buttons, or body prose.",
-        "section": "typography"
-      },
-      {
-        "name": "The Board Never Shrinks Below Its Squares Rule",
-        "body": "The board keeps a 1:1 aspect ratio and never drops below 280px. If the viewport cannot hold the board and the side column, the side column moves below the board; it never squeezes the board.",
-        "section": "layout"
-      },
-      {
-        "name": "The Warm Shadow Rule",
-        "body": "Shadows use rgba(35,32,28,...), never rgba(0,0,0,...). Pure black shadows on cream read as dirt.",
-        "section": "elevation"
-      },
-      {
-        "name": "The One Elevation Step Rule",
-        "body": "A card is either resting or raised. There is no third level; stacking more shadow to signal more importance is how a layout stops having a hierarchy.",
-        "section": "elevation"
-      }
-    ],
-    "dos": [
-      "Do keep Table Felt (#3f5f4a) under 10% of any screen, on navigation state, primary actions, focus, and the eval line only.",
-      "Do use the verdict scale (#1d7a44 / #8f6200 / #c2410c / #b3261e) exclusively for move quality, in both the move list and the eval graph, so the two always agree.",
-      "Do use tabular-nums on every clock, evaluation, and counter.",
-      "Do cap explanation prose at 65-75ch, since the explanation is the product.",
-      "Do give every interactive element a visible :focus-visible ring (0 0 0 3px rgba(63,95,74,0.28)).",
-      "Do keep the board at 1:1 and let the side column move below it on narrow screens."
-    ],
-    "donts": [
-      "Don't paint UI chrome in the board's wood (#f0d9b5 / #b58863). The board owns those.",
-      "Don't reintroduce the old blue (#4a86e8) or add any second accent.",
-      "Don't combine a border and a shadow on the same element.",
-      "Don't use pure black (#000) for text or shadows; the room is warm.",
-      "Don't badge good moves. Only inaccuracy, mistake, and blunder earn a badge.",
-      "Don't use monospace for headings, buttons, or prose.",
-      "Don't hide a disabled control. It stays visible so the visitor learns the flow."
-    ]
-  }
+  "components": [],
+  "narrative": {}
 }
