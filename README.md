@@ -23,10 +23,16 @@ numbers), evaluates positions (material plus piece-square tables), and searches 
 negamax, alpha-beta pruning (captures ordered most-valuable-victim first), iterative
 deepening, and **quiescence search** so it stops banking material it is about to lose to a
 recapture. It **plays a full game over UCI under real time controls** and reports a full
-`info` line (score, nodes, principal variation). The coaching side runs on **Stockfish**
-for accurate analysis; the next step compiles our engine to WebAssembly so you can play a
-game against it in the browser (our engine is not fast enough to replace Stockfish for deep
-analysis, so Stockfish stays the analyst and our engine becomes the sparring opponent).
+`info` line (score, nodes, principal variation).
+
+Since then the engine has grown a transposition table, killer and history move ordering,
+null-move pruning, late move reductions, aspiration windows, and magic bitboards (a depth-6
+start-position search went from about 24s to about 0.35s), plus an evaluation that scores
+mobility, king safety, passed pawns, rooks on open files, and fully tapered piece-square
+tables. It **compiles to WebAssembly and runs in the browser**, so the coach's "play the
+engine" mode is our engine, at strength levels calibrated by a rating gauntlet. Stockfish
+remains the analyst because ours is not yet fast enough for depth-12 analysis; ours is the
+opponent you play.
 
 ## Two tracks, one seam
 
@@ -103,6 +109,15 @@ Coach milestones (web, runs on Stockfish now, adopts our engine over the UCI sea
   beside the board, remembered sessions (localStorage), and under-promotion in drills.
 - [x] **C5. Eval graph** — a chess.com-style evaluation graph across the game with blunder
   markers and the engine's best line at each point.
+- [x] **C6. The Analysis Room**: a full visual redesign, replacing a plain page of form
+  controls with a dark room built around a lit board. The landing viewport autoplays a
+  miniature instead of showing three dropdowns; the coaching explanations moved out of a
+  sidebar box and into the notation itself, set beneath the move each one describes; the
+  engine reports its live search (depth, nodes, nps) while it thinks; the strength picker
+  shows each level's measured Elo; and the eval graph draws itself in when an analysis
+  finishes. One signature color, Lamp Gold, marks structure and state, while the
+  green-to-red verdict scale is reserved for move quality and used nowhere else. The system
+  is recorded in [DESIGN.md](DESIGN.md).
 
 ## Build
 
