@@ -11,6 +11,7 @@ import { legalDests, gradeAttempt, type Drill } from './drill';
 import { fetchLichess, fetchChessCom } from './import';
 import { barPercent } from './evalBar';
 import { buildGraph, type Graph } from './evalGraph';
+import { buildScore } from './annotate';
 import { initPlay } from './play';
 
 const boardEl = document.getElementById('board')!;
@@ -25,6 +26,7 @@ interface MoveAnalysis {
   bestIsMate: boolean;
   oppBest: string; // best reply at fenAfter (uci)
   pvBefore: string[];
+  bestLine: string; // the engine's line from fenBefore, in SAN, for the annotation
   explanation: string;
   whiteEvalCp: number; // eval of the position after this move, White's perspective
 }
@@ -82,22 +84,26 @@ restoreSession();
   $(id).addEventListener('input', saveSession),
 );
 
-function buildMoveList() {
-  const ol = $('moves');
+function renderMoves() {
+  const ol = $('score');
   ol.innerHTML = '';
-  moves.forEach((m, i) => {
+  const rows = buildScore(moves, analyses);
+  rows.forEach((r) => {
     const li = document.createElement('li');
-    const a = analyses[i];
-    let badge = '';
-    // Only mistakes earn a badge. A "good" tag on every second move is noise,
-    // and it buries the three moves that actually decided the game.
-    if (a && a.quality !== 'best' && a.quality !== 'good') {
-      const loss = a.cpLoss > 9999 ? ' (mate)' : ` -${a.cpLoss}`;
-      badge = ` <span class="badge q-${a.quality}">${a.quality}${loss}</span>`;
-    }
-    li.innerHTML = `<span class="san">${m.san}</span>${badge}`;
+    li.dataset.i = String(r.index);
+    li.className = r.annotation ? `score-row is-${r.quality}` : 'score-row';
+    const loss = r.cpLoss === undefined ? '' : r.cpLoss > 9999 ? 'mate' : `-${r.cpLoss}`;
+    li.innerHTML =
+      `<span class="san">${r.san}</span>` +
+      (r.annotation
+        ? `<div class="annotation">` +
+          `<span class="verdict">${r.quality} ${loss}</span>` +
+          `<p class="annotation-text">${r.annotation}</p>` +
+          (r.bestLine ? `<p class="best-line">Better: ${r.bestLine}</p>` : '') +
+          `</div>`
+        : '');
     li.addEventListener('click', () => {
-      idx = i;
+      idx = r.index;
       render();
     });
     ol.appendChild(li);
@@ -110,21 +116,14 @@ function render() {
   $('ply').textContent = idx < 0 ? 'start' : `${idx + 1}. ${moves[idx].san}`;
 
   // Highlight the active move.
-  Array.from($('moves').children).forEach((li, i) =>
+  Array.from($('score').children).forEach((li, i) =>
     li.classList.toggle('active', i === idx),
   );
 
-  // Explanation panel.
-  const a = idx >= 0 ? analyses[idx] : undefined;
-  $('explain').textContent = a?.explanation ?? '';
-
   // Eval bar (White fills from the bottom).
+  const a = idx >= 0 ? analyses[idx] : undefined;
   const white = a ? barPercent(a.whiteEvalCp) : 50;
   ($('evalfill') as HTMLElement).style.height = `${white}%`;
-
-  // Best line the engine wanted from this position (its "plan"), in SAN.
-  $('bestline').textContent =
-    a && a.pvBefore.length ? `Best line: ${pvToSan(moves[idx].fenBefore, a.pvBefore)}` : '';
 
   // Move the graph cursor to the current move.
   const cursor = document.getElementById('ga-cursor');
@@ -218,6 +217,7 @@ async function analyzeGame() {
       bestIsMate: before.score.mate !== undefined,
       oppBest: after.bestMove,
       pvBefore: before.pv,
+      bestLine: pvToSan(moves[i].fenBefore, before.pv),
       explanation: ex.text,
       whiteEvalCp,
     });
@@ -226,7 +226,7 @@ async function analyzeGame() {
   $('status').textContent = 'analysis complete';
   graph = buildGraph(analyses.map((a) => ({ whiteEvalCp: a.whiteEvalCp, quality: a.quality })));
   renderGraph();
-  buildMoveList();
+  renderMoves();
   idx = -1;
   render();
 }
@@ -240,7 +240,7 @@ $('load').addEventListener('click', () => {
     renderGraph();
     idx = -1;
     $('status').textContent = `${moves.length} moves loaded`;
-    buildMoveList();
+    renderMoves();
     render();
   } catch {
     alert('Could not parse that PGN.');

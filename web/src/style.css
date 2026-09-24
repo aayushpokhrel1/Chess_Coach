@@ -156,25 +156,6 @@ a:hover {
   }
 }
 
-.moves::-webkit-scrollbar {
-  width: 10px;
-}
-.moves::-webkit-scrollbar-track {
-  background: transparent;
-}
-.moves::-webkit-scrollbar-thumb {
-  background: var(--hairline);
-  border-radius: var(--r-pill);
-  border: 3px solid var(--room);
-}
-.moves::-webkit-scrollbar-thumb:hover {
-  background: var(--text-faint);
-}
-.moves {
-  scrollbar-width: thin;
-  scrollbar-color: var(--hairline) transparent;
-}
-
 /* ---------------------------------------------------------------------------
    Controls
    --------------------------------------------------------------------------- */
@@ -339,7 +320,7 @@ textarea:focus-visible {
    --------------------------------------------------------------------------- */
 .layout {
   display: flex;
-  gap: 1.5rem;
+  gap: 3rem;
   align-items: flex-start;
 }
 
@@ -399,18 +380,12 @@ textarea:focus-visible {
 /* ---------------------------------------------------------------------------
    Cards
    --------------------------------------------------------------------------- */
-.side,
 .report,
 .drill,
 .evalgraph {
   background: var(--raised);
   border-radius: var(--r-lg);
   border-top: 1px solid var(--edge-light);
-}
-
-.side {
-  width: 320px;
-  padding: 1rem;
 }
 
 .report {
@@ -428,70 +403,123 @@ textarea:focus-visible {
   padding: 1rem;
 }
 
-/* The explanation is a sunken well: a container for engine output, not a card. */
-.explain {
-  min-height: 3rem;
-  padding: 0.75rem;
-  background: var(--raised);
-  border-radius: var(--r-md);
-  margin-bottom: 0.75rem;
-  line-height: 1.55;
-  max-width: 70ch;
+/* ---------------------------------------------------------------------------
+   The score column
+   --------------------------------------------------------------------------- */
+.score-col {
+  flex: 1 1 420px;
+  min-width: 320px;
 }
 
-/* ---------------------------------------------------------------------------
-   Move list
-   --------------------------------------------------------------------------- */
-.moves {
-  max-height: 420px;
-  overflow-y: auto;
-  padding-left: 2rem;
+.score {
+  list-style: decimal;
+  padding-left: 2.5rem;
   margin: 0;
   color: var(--text-muted);
+  max-height: 640px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
 }
 
-.moves li {
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: var(--r-sm);
+.score-row {
+  padding: 0.25rem 0 0.25rem 0.5rem;
   border-left: 1px solid transparent;
-  transition: background var(--t-state) var(--ease);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: border-color var(--t-state) var(--ease);
 }
-.moves li:hover {
-  background: var(--raised);
+.score-row:hover .san {
+  color: var(--text-bright);
 }
-.moves li.active {
-  background: var(--raised);
+.score-row.active {
   border-left-color: var(--lamp);
 }
+.score-row.active .san {
+  color: var(--text-bright);
+}
 
-.moves .san {
+.san {
   font-family: var(--font-mono);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
-.badge {
-  font-size: 0.8rem;
+/* The annotation is the coach's markup inside the score, not a panel beside it. */
+.annotation {
+  margin: 0.5rem 0 1rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--hairline);
+}
+.is-inaccuracy .annotation {
+  border-left-color: var(--verdict-inaccuracy);
+}
+.is-mistake .annotation {
+  border-left-color: var(--verdict-mistake);
+}
+.is-blunder .annotation {
+  border-left-color: var(--verdict-blunder);
+}
+
+.verdict {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-  border-radius: var(--r-sm);
-  padding: 1px 4px;
+  margin-bottom: 0.25rem;
 }
-.q-best,
-.q-good {
-  color: var(--verdict-sound);
-}
-.q-inaccuracy {
+.is-inaccuracy .verdict {
   color: var(--verdict-inaccuracy);
 }
-.q-mistake {
+.is-mistake .verdict {
   color: var(--verdict-mistake);
 }
-.q-blunder {
+.is-blunder .verdict {
   color: var(--verdict-blunder);
+}
+
+.annotation-text {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+  max-width: 64ch;
+  /* Collapsed until its move is selected. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.score-row.active .annotation-text {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.best-line {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+}
+.score-row:not(.active) .best-line {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  .score-col {
+    flex-basis: 100%;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -633,17 +661,8 @@ textarea:focus-visible {
   vector-effect: non-scaling-stroke;
 }
 
-.bestline {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin: 0.25rem 0 0.75rem;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ---------------------------------------------------------------------------
-   Responsive: the side column moves below the board; the board never squeezes.
+   Responsive: the score column moves below the board; the board never squeezes.
    --------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   .layout {
@@ -655,10 +674,6 @@ textarea:focus-visible {
   }
   .board {
     height: auto;
-  }
-  .side {
-    width: 100%;
-    max-width: 480px;
   }
 }
 
